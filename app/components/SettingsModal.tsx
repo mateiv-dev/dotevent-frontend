@@ -1,0 +1,304 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Select } from './ui/Select';
+import { Checkbox } from './ui/Checkbox';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+type Tab = 'profile' | 'notifications' | 'appearance' | 'account';
+
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const { currentUser, updateUser, settings, updateSettings } = useApp();
+  const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  const [name, setName] = useState(currentUser.name);
+  const [email, setEmail] = useState(currentUser.email);
+  const [roleField, setRoleField] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(currentUser.name);
+      setEmail(currentUser.email);
+
+      if (currentUser.role === 'student') {
+        setRoleField(currentUser.university);
+      } else if (currentUser.role === 'organizer') {
+        setRoleField(currentUser.organizationName);
+      } else if (currentUser.role === 'student_rep') {
+        setRoleField(currentUser.represents);
+      } else {
+        setRoleField('');
+      }
+    }
+  }, [isOpen, currentUser]);
+
+  const handleSave = () => {
+    const userUpdates: any = { name, email };
+
+    if (currentUser.role === 'student') {
+      userUpdates.university = roleField;
+    } else if (currentUser.role === 'organizer') {
+      userUpdates.organizationName = roleField;
+    } else if (currentUser.role === 'student_rep') {
+      userUpdates.represents = roleField;
+    }
+
+    updateUser(userUpdates);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'account', label: 'Account', icon: Shield },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 lg:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[calc(95vh-6rem)] lg:max-h-[90vh] mb-16 lg:mb-0 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+
+        <div className="p-4 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+          <h2 className="text-lg sm:text-lg font-semibold text-slate-900">Settings</h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex sm:flex-row flex-col flex-1 overflow-hidden min-h-0">
+          <div className="w-48 bg-slate-50 border-r border-slate-100 p-3 space-y-1 hidden sm:block shrink-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+              >
+                <tab.icon size={18} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="sm:hidden flex overflow-x-auto border-b border-slate-100 px-4 py-3 gap-2 shrink-0 scrollbar-hide">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 bg-slate-100'
+                  }`}
+              >
+                <tab.icon size={18} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 p-5 sm:p-6 overflow-y-auto min-h-0">
+
+            {activeTab === 'profile' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Personal Information</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Manage your personal details.</p>
+
+                  <div className="space-y-3 sm:space-y-4">
+                    <Input
+                      label="Full Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                    <Input
+                      label="Email Address"
+                      type="email"
+                      leftIcon={<Mail size={16} />}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 sm:pt-6 border-t border-slate-100">
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Role Information</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Details specific to your role as {currentUser.role}.</p>
+
+                  <Input
+                    label={currentUser.role === 'student' ? 'University / Department' :
+                      currentUser.role === 'organizer' ? 'Organization Name' :
+                        currentUser.role === 'student_rep' ? 'Department / Faculty' :
+                          'Organization'}
+                    leftIcon={<Building size={16} />}
+                    value={roleField}
+                    onChange={(e) => setRoleField(e.target.value)}
+                    disabled={currentUser.role === 'user' || currentUser.role === 'admin'}
+                    className="disabled:bg-slate-50 disabled:text-slate-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Event Reminders</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Choose when you want to be notified about upcoming events.</p>
+
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => updateSettings({ notifications: { ...settings.notifications, reminder24h: !settings.notifications.reminder24h } })}>
+                      <span className="text-sm sm:text-sm font-medium text-slate-700">24 hours before</span>
+                      <Checkbox
+                        checked={settings.notifications.reminder24h}
+                        readOnly
+                        containerClassName="pointer-events-none"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => updateSettings({ notifications: { ...settings.notifications, reminder1h: !settings.notifications.reminder1h } })}>
+                      <span className="text-sm sm:text-sm font-medium text-slate-700">1 hour before</span>
+                      <Checkbox
+                        checked={settings.notifications.reminder1h}
+                        readOnly
+                        containerClassName="pointer-events-none"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => updateSettings({ notifications: { ...settings.notifications, eventUpdates: !settings.notifications.eventUpdates } })}>
+                      <span className="text-sm sm:text-sm font-medium text-slate-700">Event updates</span>
+                      <Checkbox
+                        checked={settings.notifications.eventUpdates}
+                        readOnly
+                        containerClassName="pointer-events-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'appearance' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Theme</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Customize the look and feel of the application.</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => updateSettings({ appearance: { ...settings.appearance, theme: 'light' } })}
+                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === 'light' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                    >
+                      <div className="w-full h-20 sm:h-20 bg-white border border-slate-200 rounded-lg shadow-sm"></div>
+                      <span className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === 'light' ? 'text-blue-700' : 'text-slate-600'
+                        }`}>Light</span>
+                    </button>
+                    <button
+                      onClick={() => updateSettings({ appearance: { ...settings.appearance, theme: 'dark' } })}
+                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === 'dark' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                    >
+                      <div className="w-full h-20 sm:h-20 bg-slate-900 border border-slate-700 rounded-lg shadow-sm"></div>
+                      <span className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === 'dark' ? 'text-blue-700' : 'text-slate-600'
+                        }`}>Dark</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4 sm:pt-6 border-t border-slate-100">
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Language</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Select your preferred language.</p>
+
+                  <Select
+                    value={settings.appearance.language}
+                    onChange={(e) => updateSettings({ appearance: { ...settings.appearance, language: e.target.value as 'en' | 'ro' } })}
+                  >
+                    <option value="en">English</option>
+                    <option value="ro">Română</option>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'account' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Security</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Manage your password and account access.</p>
+
+                  <button className="w-full flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-left group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+                        <Key size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm sm:text-sm font-medium text-slate-900">Change Password</p>
+                        <p className="text-xs sm:text-xs text-slate-500">Update your password regularly</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="pt-4 sm:pt-6 border-t border-slate-100">
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Session</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Sign out of your account.</p>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start bg-slate-100 hover:bg-slate-200 border-none shadow-none text-slate-700"
+                    leftIcon={<LogOut size={18} />}
+                  >
+                    Log Out
+                  </Button>
+                </div>
+
+                <div className="pt-4 sm:pt-6 border-t border-slate-100">
+                  <h3 className="text-lg sm:text-lg font-medium text-red-600 mb-1">Danger Zone</h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Irreversible actions for your account.</p>
+
+                  <Button
+                    variant="danger"
+                    className="w-full justify-start"
+                    leftIcon={<Trash2 size={18} />}
+                  >
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 sm:gap-3 shrink-0">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+          >
+            Save Changes
+          </Button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
