@@ -106,4 +106,4 @@ export const MOCK_ADMIN: Admin = {
   role: "admin",
 };
 
-export const CURRENT_USER = MOCK_STUDENT;
+export const CURRENT_USER = MOCK_NORMAL_USER;

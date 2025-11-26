@@ -49,14 +49,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const savedUser = localStorage.getItem('currentUser');
-      if (savedUser) {
-        try {
-          setCurrentUser(JSON.parse(savedUser));
-        } catch (e) {
-          console.error('Failed to parse user:', e);
-        }
-      }
     }
   }, []);
 

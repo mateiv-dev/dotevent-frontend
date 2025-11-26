@@ -69,13 +69,15 @@ export default function Layout({
             <Calendar size={20} />
             Browse Events
           </Link>
-          <Link
-            href="/events/create"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'create' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-          >
-            <Plus size={20} />
-            Create Event
-          </Link>
+          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+            <Link
+              href="/events/create"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'create' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Plus size={20} />
+              Create Event
+            </Link>
+          )}
         </nav>
 
         <div className="p-6 border-t border-slate-800 text-center">
@@ -192,13 +194,15 @@ export default function Layout({
             <span className="text-[10px] font-medium">Events</span>
           </Link>
 
-          <Link
-            href="/events/create"
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'create' ? 'text-blue-400' : 'text-slate-400'}`}
-          >
-            <Plus size={20} />
-            <span className="text-[10px] font-medium">Create</span>
-          </Link>
+          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+            <Link
+              href="/events/create"
+              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'create' ? 'text-blue-400' : 'text-slate-400'}`}
+            >
+              <Plus size={20} />
+              <span className="text-[10px] font-medium">Create</span>
+            </Link>
+          )}
         </div>
       </nav>
     </div>
