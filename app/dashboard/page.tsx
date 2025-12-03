@@ -23,13 +23,15 @@ export default function DashboardPage() {
     <Layout
       pageTitle="Student Dashboard"
     >
-      <DashboardView
-        currentUser={currentUser}
-        events={events}
-        registeredCount={registeredCount}
-        toEvents={toEvents}
-        onEventClick={handleEventClick}
-      />
+      {currentUser && (
+        <DashboardView
+          currentUser={currentUser}
+          events={events}
+          registeredCount={registeredCount}
+          toEvents={toEvents}
+          onEventClick={handleEventClick}
+        />
+      )}
     </Layout>
   );
 }

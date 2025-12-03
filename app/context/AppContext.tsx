@@ -5,10 +5,12 @@ import Event from '../types/event';
 import Notification from '../types/notification';
 import { User } from '../types/user';
 import { UserSettings, DEFAULT_SETTINGS } from '../types/settings';
-import { INITIAL_EVENTS, INITIAL_NOTIFICATIONS, CURRENT_USER } from '../data/mockData';
+import { INITIAL_EVENTS, INITIAL_NOTIFICATIONS } from '../data/mockData';
+import { useAuth } from './AuthContext';
 
 interface AppContextType {
-  currentUser: User;
+  currentUser: User | null;
+  isLoading: boolean;
   updateUser: (updates: Partial<User>) => void;
   events: Event[];
   toggleRegistration: (id: number) => void;
@@ -35,25 +37,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [currentUser, setCurrentUser] = useState<User>(CURRENT_USER);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const { user: firebaseUser, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('userSettings');
-      if (savedSettings) {
-        try {
-          setSettings(JSON.parse(savedSettings));
-        } catch (e) {
-          console.error('Failed to parse settings:', e);
-        }
-      }
+    if (authLoading) return;
 
-    }
-  }, []);
+    const fetchUser = async (retries = 3, delay = 1000) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const response = await fetch('http://localhost:3001/api/users/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            const mappedUser: User = {
+              ...userData,
+              id: userData.firebaseUid
+            };
+            setCurrentUser(mappedUser);
+          } else if (response.status === 404 && retries > 0) {
+            console.log(`User profile not found, retrying in ${delay}ms... (${retries} retries left)`);
+            setTimeout(() => fetchUser(retries - 1, delay), delay);
+          } else {
+            console.error('Failed to fetch user profile');
+            setCurrentUser(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+          if (retries > 0) {
+            setTimeout(() => fetchUser(retries - 1, delay), delay);
+          }
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    fetchUser();
+  }, [firebaseUser, authLoading]);
 
   const updateUser = useCallback((updates: Partial<User>) => {
     setCurrentUser(prev => {
+      if (!prev) return prev;
       const updated = { ...prev, ...updates } as User;
       if (typeof window !== 'undefined') {
         localStorage.setItem('currentUser', JSON.stringify(updated));
@@ -123,6 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     currentUser,
+    isLoading: authLoading,
     updateUser,
     events,
     toggleRegistration,
@@ -151,6 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedCategory,
     settings,
     updateSettings,
+    authLoading,
   ]); return (
     <AppContext.Provider value={value}>
       {children}

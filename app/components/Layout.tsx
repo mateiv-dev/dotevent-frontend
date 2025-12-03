@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
@@ -28,7 +28,7 @@ export default function Layout({
 }: LayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, notifications, markAsRead, deleteNotification, markAllAsRead } = useApp();
+  const { currentUser, isLoading, notifications, markAsRead, deleteNotification, markAllAsRead } = useApp();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -38,6 +38,20 @@ export default function Layout({
       pathname.startsWith('/events') ? 'events' : '';
 
   const showBackButton = pathname.match(/^\/events\/\d+$/);
+
+  useEffect(() => {
+    if (!isLoading && !currentUser) {
+      router.push('/login');
+    }
+  }, [isLoading, currentUser, router]);
+
+  if (isLoading || !currentUser) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
@@ -17,30 +18,34 @@ type Tab = 'profile' | 'notifications' | 'appearance' | 'account';
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { currentUser, updateUser, settings, updateSettings } = useApp();
+  const { signOut, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
-  const [name, setName] = useState(currentUser.name);
-  const [email, setEmail] = useState(currentUser.email);
+  const [name, setName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
   const [roleField, setRoleField] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && currentUser) {
       setName(currentUser.name);
       setEmail(currentUser.email);
 
       if (currentUser.role === 'student') {
-        setRoleField(currentUser.university);
+        setRoleField((currentUser as any).university);
       } else if (currentUser.role === 'organizer') {
-        setRoleField(currentUser.organizationName);
+        setRoleField((currentUser as any).organizationName);
       } else if (currentUser.role === 'student_rep') {
-        setRoleField(currentUser.represents);
+        setRoleField((currentUser as any).represents);
       } else {
         setRoleField('');
       }
     }
   }, [isOpen, currentUser]);
 
+  if (!currentUser) return null;
+
   const handleSave = () => {
+    if (!currentUser) return;
     const userUpdates: any = { name, email };
 
     if (currentUser.role === 'student') {
@@ -260,6 +265,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     variant="ghost"
                     className="w-full justify-start bg-slate-100 hover:bg-slate-200 border-none shadow-none text-slate-700"
                     leftIcon={<LogOut size={18} />}
+                    onClick={() => {
+                      signOut();
+                      onClose();
+                    }}
                   >
                     Log Out
                   </Button>
@@ -273,6 +282,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     variant="danger"
                     className="w-full justify-start"
                     leftIcon={<Trash2 size={18} />}
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                        await deleteAccount();
+                        onClose();
+                      }
+                    }}
                   >
                     Delete Account
                   </Button>

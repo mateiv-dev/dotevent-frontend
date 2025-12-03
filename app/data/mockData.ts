@@ -69,41 +69,41 @@ export const INITIAL_NOTIFICATIONS: Notification[] = [
 ];
 
 export const MOCK_NORMAL_USER: NormalUser = {
-  id: 1,
-  name: "John Doe",
-  email: "john.doe@example.com",
+  id: "1",
+  name: "Alex Popescu",
+  email: "alex.popescu@example.com",
   role: "user",
 };
 
-export const MOCK_STUDENT: Student = {
-  id: 2,
-  name: "Matei Vasilean",
-  email: "matei.vasilean@student.usv.ro",
+export const MOCK_STUDENT_USER: Student = {
+  id: "2",
+  name: "Maria Ionescu",
+  email: "maria.ionescu@student.upb.ro",
   role: "student",
-  university: "Stefan cel Mare University of Suceava",
+  university: "Politehnica University of Bucharest",
 };
 
 export const MOCK_STUDENT_REP: StudentRep = {
-  id: 3,
-  name: "Alice Johnson",
-  email: "alice.johnson@student.usv.ro",
+  id: "3",
+  name: "Andrei Radu",
+  email: "andrei.radu@student.upb.ro",
   role: "student_rep",
-  represents: "Faculty of Electrical and Computer Engineering",
+  represents: "Faculty of Automatic Control and Computers",
 };
 
 export const MOCK_ORGANIZER: Organizer = {
-  id: 4,
-  name: "David Smith",
-  email: "david.smith@usv.ro",
+  id: "4",
+  name: "Tech Club",
+  email: "contact@techclub.ro",
   role: "organizer",
-  organizationName: "Student Union",
+  organizationName: "Tech Club Bucharest",
 };
 
 export const MOCK_ADMIN: Admin = {
-  id: 5,
-  name: "Sarah Williams",
-  email: "sarah.williams@admin.usv.ro",
+  id: "5",
+  name: "System Admin",
+  email: "admin@dotevent.ro",
   role: "admin",
 };
 
-export const CURRENT_USER = MOCK_NORMAL_USER;
+export const CURRENT_USER = null;

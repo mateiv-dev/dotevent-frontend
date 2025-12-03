@@ -11,8 +11,9 @@ export default function CreateEventPage() {
   const { createEvent, currentUser } = useApp();
 
   useEffect(() => {
+    if (!currentUser) return;
     if (!['student_rep', 'organizer', 'admin'].includes(currentUser.role)) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [currentUser, router]);
 
