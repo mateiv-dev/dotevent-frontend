@@ -7,6 +7,7 @@ import { User } from '../types/user';
 import { UserSettings, DEFAULT_SETTINGS } from '../types/settings';
 import { INITIAL_EVENTS, INITIAL_NOTIFICATIONS } from '../data/mockData';
 import { useAuth } from './AuthContext';
+import { apiClient } from '../../lib/apiClient';
 
 interface AppContextType {
   currentUser: User | null;
@@ -47,31 +48,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const fetchUser = async (retries = 3, delay = 1000) => {
       if (firebaseUser) {
         try {
-          const token = await firebaseUser.getIdToken();
-          const response = await fetch('http://localhost:3001/api/users/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          const userData = await apiClient.get<any>('/api/users/me');
+          const mappedUser: User = {
+            ...userData,
+            id: userData.firebaseUid
+          };
+          setCurrentUser(mappedUser);
+        } catch (error: any) {
+          const is404 = error.status === 404 || error.message?.includes('404') || error.message?.includes('not found');
 
-          if (response.ok) {
-            const userData = await response.json();
-            const mappedUser: User = {
-              ...userData,
-              id: userData.firebaseUid
-            };
-            setCurrentUser(mappedUser);
-          } else if (response.status === 404 && retries > 0) {
+          if (is404 && retries > 0) {
             console.log(`User profile not found, retrying in ${delay}ms... (${retries} retries left)`);
             setTimeout(() => fetchUser(retries - 1, delay), delay);
           } else {
-            console.error('Failed to fetch user profile');
+            console.error('Failed to fetch user profile:', error);
             setCurrentUser(null);
-          }
-        } catch (error) {
-          console.error('Error fetching user:', error);
-          if (retries > 0) {
-            setTimeout(() => fetchUser(retries - 1, delay), delay);
           }
         }
       } else {

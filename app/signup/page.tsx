@@ -14,12 +14,14 @@ export default function SignupPage() {
   const [represents, setRepresents] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
     try {
       await signUp(email, password, {
         name,
@@ -28,9 +30,14 @@ export default function SignupPage() {
         represents: role === 'student_rep' ? represents : undefined,
         organizationName: role === 'organizer' ? organizationName : undefined
       });
-      router.push("/");
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -129,9 +136,10 @@ export default function SignupPage() {
           <div>
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              disabled={isLoading}
+              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign up
+              {isLoading ? "Creating account..." : "Sign up"}
             </button>
           </div>
           <div className="text-sm text-center">

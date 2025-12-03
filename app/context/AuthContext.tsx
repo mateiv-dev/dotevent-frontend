@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!auth) throw new Error("Firebase is not configured.");
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-    await apiClient.post('/api/users/sync', profileData);
+    await apiClient.post('/api/users/register', profileData);
   };
 
   const signOut = async () => {
