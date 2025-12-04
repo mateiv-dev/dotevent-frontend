@@ -9,10 +9,6 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState("user");
-  const [university, setUniversity] = useState("");
-  const [represents, setRepresents] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
@@ -23,13 +19,7 @@ export default function SignupPage() {
     setError("");
     setIsLoading(true);
     try {
-      await signUp(email, password, {
-        name,
-        role,
-        university: role === 'student' ? university : undefined,
-        represents: role === 'student_rep' ? represents : undefined,
-        organizationName: role === 'organizer' ? organizationName : undefined
-      });
+      await signUp(email, password, { name });
 
       await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -75,60 +65,12 @@ export default function SignupPage() {
               <input
                 type="password"
                 required
-                className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
+                className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-              >
-                <option value="user">User</option>
-                <option value="student">Student</option>
-                <option value="student_rep">Student Representative</option>
-                <option value="organizer">Organizer</option>
-              </select>
-            </div>
-            {role === 'student' && (
-              <div>
-                <input
-                  type="text"
-                  required
-                  className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                  placeholder="University"
-                  value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                />
-              </div>
-            )}
-            {role === 'student_rep' && (
-              <div>
-                <input
-                  type="text"
-                  required
-                  className="relative block w-full border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                  placeholder="Represents (e.g. CS Department)"
-                  value={represents}
-                  onChange={(e) => setRepresents(e.target.value)}
-                />
-              </div>
-            )}
-            {role === 'organizer' && (
-              <div>
-                <input
-                  type="text"
-                  required
-                  className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 px-3"
-                  placeholder="Organization Name"
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.target.value)}
-                />
-              </div>
-            )}
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
