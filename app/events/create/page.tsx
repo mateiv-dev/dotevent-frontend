@@ -22,9 +22,6 @@ export default function CreateEventPage() {
     const success = await createEvent(newEvent);
     if (success) {
       setShowSuccess(true);
-      setTimeout(() => {
-        router.push('/events');
-      }, 2000);
     }
     return success;
   };
@@ -47,7 +44,12 @@ export default function CreateEventPage() {
             <p className="text-slate-500 mb-4">
               Your event has been submitted for review. It will be visible once approved by an admin.
             </p>
-            <p className="text-sm text-slate-400">Redirecting to events...</p>
+            <button
+              className="w-auto py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => router.push('/events')}
+            >
+              Go to Events
+            </button>
           </div>
         </div>
       </Layout>
