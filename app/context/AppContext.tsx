@@ -5,17 +5,19 @@ import Event from '../types/event';
 import Notification from '../types/notification';
 import { User } from '../types/user';
 import { UserSettings, DEFAULT_SETTINGS } from '../types/settings';
-import { INITIAL_EVENTS, INITIAL_NOTIFICATIONS } from '../data/mockData';
+import { INITIAL_NOTIFICATIONS } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { apiClient } from '../../lib/apiClient';
 
 interface AppContextType {
   currentUser: User | null;
   isLoading: boolean;
-  updateUser: (updates: Partial<User>) => void;
+  eventsLoading: boolean;
+  updateUser: (updates: Partial<User>) => Promise<void>;
   events: Event[];
-  toggleRegistration: (id: number) => void;
-  createEvent: (newEvent: any) => void;
+  refreshEvents: () => Promise<void>;
+  toggleRegistration: (id: string) => void;
+  createEvent: (newEvent: any) => Promise<boolean>;
 
   notifications: Notification[];
   markAsRead: (id: number) => void;
@@ -34,13 +36,46 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const { user: firebaseUser, loading: authLoading } = useAuth();
+
+  const fetchEvents = useCallback(async () => {
+    setEventsLoading(true);
+    try {
+      const eventsData = await apiClient.get<any[]>('/api/events', { requiresAuth: false });
+      const mappedEvents: Event[] = eventsData.map((event: any) => ({
+        id: event._id || event.id,
+        title: event.title,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        category: event.category,
+        attendees: event.attendees || 0,
+        capacity: event.capacity,
+        organizer: event.organizer,
+        description: event.description,
+        status: event.status,
+        rejectionReason: event.rejectionReason,
+        isRegistered: false, // TODO: Implement registration tracking when backend supports it
+      }));
+      setEvents(mappedEvents);
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      setEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -51,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const userData = await apiClient.get<any>('/api/users/me');
           const mappedUser: User = {
             ...userData,
-            id: userData.firebaseUid
+            id: userData.firebaseId || userData._id
           };
           setCurrentUser(mappedUser);
         } catch (error: any) {
@@ -73,16 +108,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [firebaseUser, authLoading]);
 
-  const updateUser = useCallback((updates: Partial<User>) => {
-    setCurrentUser(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...updates } as User;
+  const updateUser = useCallback(async (updates: Partial<User>) => {
+    if (!currentUser) return;
+
+    try {
+      const updatedUserData = await apiClient.put<any>('/api/users/me', updates);
+
+      const mappedUser: User = {
+        ...updatedUserData,
+        id: updatedUserData.firebaseId || updatedUserData._id
+      };
+      setCurrentUser(mappedUser);
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem('currentUser', JSON.stringify(updated));
+        localStorage.setItem('currentUser', JSON.stringify(mappedUser));
       }
-      return updated;
-    });
-  }, []);
+    } catch (error) {
+      console.error('Failed to update user profile:', error);
+      throw error;
+    }
+  }, [currentUser]);
 
   const updateSettings = useCallback((updates: Partial<UserSettings>) => {
     setSettings(prev => {
@@ -103,7 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const toggleRegistration = useCallback((id: number) => {
+  const toggleRegistration = useCallback((id: string) => {
     setEvents(prevEvents => prevEvents.map(ev => {
       if (ev.id === id) {
         return {
@@ -116,18 +161,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const createEvent = useCallback((newEvent: any) => {
-    setEvents(prevEvents => {
-      const eventToAdd: Event = {
-        id: prevEvents.length + 1,
-        ...newEvent,
-        attendees: 0,
-        isRegistered: false,
-        organizer: "Student Union"
+  const createEvent = useCallback(async (newEvent: any): Promise<boolean> => {
+    try {
+      const eventData = {
+        title: newEvent.title,
+        date: newEvent.date,
+        time: newEvent.time,
+        location: newEvent.location,
+        category: newEvent.category,
+        capacity: newEvent.capacity,
+        organizer: newEvent.organizer,
+        description: newEvent.description,
       };
-      return [eventToAdd, ...prevEvents];
-    });
-  }, []);
+
+      await apiClient.post('/api/events', eventData);
+
+      await fetchEvents();
+
+      return true;
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      return false;
+    }
+  }, [fetchEvents]);
+
+  const refreshEvents = useCallback(async () => {
+    await fetchEvents();
+  }, [fetchEvents]);
 
   const markAsRead = useCallback((id: number) => {
     setNotifications(prevNotifications => prevNotifications.map(n =>
@@ -146,8 +206,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     currentUser,
     isLoading: authLoading,
+    eventsLoading,
     updateUser,
     events,
+    refreshEvents,
     toggleRegistration,
     createEvent,
     notifications,
@@ -164,6 +226,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     currentUser,
     updateUser,
     events,
+    eventsLoading,
+    refreshEvents,
     toggleRegistration,
     createEvent,
     notifications,
@@ -175,7 +239,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     settings,
     updateSettings,
     authLoading,
-  ]); return (
+  ]);
+
+  return (
     <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>

@@ -25,7 +25,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     params.then((resolvedParams) => {
       setId(resolvedParams.id);
-      const foundEvent = events.find(e => e.id === parseInt(resolvedParams.id));
+      const foundEvent = events.find(e => e.id === resolvedParams.id);
       setEvent(foundEvent || null);
     });
   }, [params, events]);

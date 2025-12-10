@@ -3,7 +3,7 @@ import Event from '../types/event';
 import { useApp } from '../context/AppContext';
 import { getCategoryStyles } from '../utils/categoryStyles';
 
-function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, onEventClick }: { events: Event[], searchTerm: string, setSearchTerm: (term: string) => void, toggleRegistration: (id: number) => void, onEventClick: (id: number) => void }) {
+function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, onEventClick }: { events: Event[], searchTerm: string, setSearchTerm: (term: string) => void, toggleRegistration: (id: string) => void, onEventClick: (id: string) => void }) {
   const { selectedCategory, setSelectedCategory } = useApp();
 
   return (

@@ -17,7 +17,7 @@ function DashboardView({
   events: Event[];
   registeredCount: number;
   toEvents: () => void;
-  onEventClick: (id: number) => void;
+  onEventClick: (id: string) => void;
 }) {
   const unregisteredEvents = events.filter(e => !e.isRegistered);
   const nextUnregisteredEvent = unregisteredEvents.length > 0 ? unregisteredEvents[0] : null;

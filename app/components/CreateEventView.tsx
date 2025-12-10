@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Calendar, Clock, MapPin, Tag, Users, User } from 'lucide-react';
+import { Plus, Calendar, Clock, MapPin, Tag, Users, User, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { TextArea } from './ui/TextArea';
 
-function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => void, onCancel: () => void }) {
+interface CreateEventViewProps {
+  onCreate: (event: any) => Promise<boolean>;
+  onCancel: () => void;
+}
+
+function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     date: '',
@@ -19,9 +26,21 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
     organizer: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(formData);
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const success = await onCreate(formData);
+      if (!success) {
+        setError('Failed to create event. Please try again.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to create event. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -30,6 +49,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
         <div className="bg-slate-50/50 p-8 border-b border-slate-100">
           <h2 className="text-2xl font-bold text-slate-900">Create New Event</h2>
           <p className="text-slate-500 mt-1">Fill in the details to publish an event to the student portal.</p>
+          <p className="text-amber-600 text-sm mt-2">Note: Events require admin approval before they become visible.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
@@ -41,6 +61,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="text-lg placeholder:font-normal"
+              disabled={isSubmitting}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -51,6 +72,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
                 leftIcon={<Calendar size={16} />}
                 value={formData.date}
                 onChange={e => setFormData({ ...formData, date: e.target.value })}
+                disabled={isSubmitting}
               />
               <Input
                 label="Time"
@@ -59,6 +81,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
                 leftIcon={<Clock size={16} />}
                 value={formData.time}
                 onChange={e => setFormData({ ...formData, time: e.target.value })}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -70,12 +93,14 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
                 leftIcon={<MapPin size={16} />}
                 value={formData.location}
                 onChange={e => setFormData({ ...formData, location: e.target.value })}
+                disabled={isSubmitting}
               />
               <Select
                 label="Category"
                 leftIcon={<Tag size={16} />}
                 value={formData.category}
                 onChange={e => setFormData({ ...formData, category: e.target.value })}
+                disabled={isSubmitting}
               >
                 <option>Academic</option>
                 <option>Social</option>
@@ -93,6 +118,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
                 leftIcon={<Users size={16} />}
                 value={formData.capacity}
                 onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
+                disabled={isSubmitting}
               />
               <Input
                 label="Organizer"
@@ -101,6 +127,7 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
                 leftIcon={<User size={16} />}
                 value={formData.organizer}
                 onChange={e => setFormData({ ...formData, organizer: e.target.value })}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -110,23 +137,32 @@ function CreateEventView({ onCreate, onCancel }: { onCreate: (event: any) => voi
               placeholder="What is this event about?"
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
+              disabled={isSubmitting}
             />
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-100">
             <Button
               type="button"
               variant="ghost"
               onClick={onCancel}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="primary"
-              leftIcon={<Plus size={20} />}
+              leftIcon={isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
+              disabled={isSubmitting}
             >
-              Publish Event
+              {isSubmitting ? 'Creating...' : 'Publish Event'}
             </Button>
           </div>
         </form>

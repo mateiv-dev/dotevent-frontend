@@ -15,7 +15,7 @@ export default function EventsPage() {
     toggleRegistration,
   } = useApp();
 
-  const handleEventClick = (id: number) => {
+  const handleEventClick = (id: string) => {
     router.push(`/events/${id}`);
   };
 

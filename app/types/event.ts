@@ -1,5 +1,7 @@
+export type EventStatus = 'pending' | 'approved' | 'rejected';
+
 export default interface Event {
-  id: number;
+  id: string;
   title: string;
   date: string;
   time: string;
@@ -7,7 +9,9 @@ export default interface Event {
   category: 'Academic' | 'Social' | 'Career' | 'Sports';
   attendees: number;
   capacity: number;
-  isRegistered: boolean;
+  isRegistered?: boolean;
   organizer: string;
   description: string;
+  status?: EventStatus;
+  rejectionReason?: string;
 }

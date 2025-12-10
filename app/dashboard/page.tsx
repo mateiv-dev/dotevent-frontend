@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   const registeredCount = events.filter(e => e.isRegistered).length;
 
-  const handleEventClick = (id: number) => {
+  const handleEventClick = (id: string) => {
     router.push(`/events/${id}`);
   };
 
