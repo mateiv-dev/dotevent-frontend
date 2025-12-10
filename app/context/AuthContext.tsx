@@ -40,8 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
     });
 
@@ -55,8 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, profileData: any) => {
     if (!auth) throw new Error("Firebase is not configured.");
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
+    await createUserWithEmailAndPassword(auth, email, password);
     await apiClient.post('/api/users/register', profileData);
   };
 
@@ -67,9 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAccount = async () => {
     if (!auth || !auth.currentUser) return;
-
     const user = auth.currentUser;
-
     await apiClient.delete('/api/users/me');
     await user.delete();
   };

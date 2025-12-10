@@ -42,6 +42,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const { user: firebaseUser, loading: authLoading } = useAuth();
 
@@ -82,6 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const fetchUser = async (retries = 3, delay = 1000) => {
       if (firebaseUser) {
+        setUserLoading(true);
         try {
           const userData = await apiClient.get<any>('/api/users/me');
           const mappedUser: User = {
@@ -89,19 +91,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
             id: userData.firebaseId || userData._id
           };
           setCurrentUser(mappedUser);
+          setUserLoading(false);
         } catch (error: any) {
           const is404 = error.status === 404 || error.message?.includes('404') || error.message?.includes('not found');
 
           if (is404 && retries > 0) {
-            console.log(`User profile not found, retrying in ${delay}ms... (${retries} retries left)`);
             setTimeout(() => fetchUser(retries - 1, delay), delay);
+            return;
           } else {
-            console.error('Failed to fetch user profile:', error);
             setCurrentUser(null);
+            setUserLoading(false);
           }
         }
       } else {
         setCurrentUser(null);
+        setUserLoading(false);
       }
     };
 
@@ -205,7 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     currentUser,
-    isLoading: authLoading,
+    isLoading: authLoading || userLoading,
     eventsLoading,
     updateUser,
     events,
@@ -239,6 +243,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     settings,
     updateSettings,
     authLoading,
+    userLoading,
   ]);
 
   return (
