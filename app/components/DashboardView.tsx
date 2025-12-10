@@ -34,12 +34,12 @@ function DashboardView({
                 {nextUnregisteredEvent && (
                   <>
                     <br />
-                    Don&apos;t miss the {nextUnregisteredEvent.title}!
+                    { `Don't miss the ${nextUnregisteredEvent.title}!` }
                   </>
                 )}
               </>
             ) : (
-              <>You&apos;re all caught up! No new events at the moment.</>
+              <> {`You're all caught up! No new events at the moment.`} </>
             )}
           </p>
           <Button

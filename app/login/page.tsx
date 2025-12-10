@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,8 +11,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,8 +144,8 @@ export default function LoginPage() {
 
         {/* Footer link */}
         <p className="text-center mt-6 text-slate-600">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-semibold text-blue-600 hover:text-indigo-700 transition-colors">
+          {`Don't have an account? `}
+          <Link href="/register" className="font-semibold text-blue-600 hover:text-indigo-700 transition-colors">
             Sign up
           </Link>
         </p>
