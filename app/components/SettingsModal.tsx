@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building } from 'lucide-react';
+import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
@@ -20,6 +20,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { currentUser, updateUser, settings, updateSettings } = useApp();
   const { signOut, deleteAccount } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
@@ -29,6 +31,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (isOpen && currentUser) {
       setName(currentUser.name);
       setEmail(currentUser.email);
+      setSaveError('');
 
       if (currentUser.role === 'student') {
         setRoleField((currentUser as any).university);
@@ -44,9 +47,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!currentUser) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentUser) return;
-    const userUpdates: any = { name, email };
+    setIsSaving(true);
+    setSaveError('');
+
+    const userUpdates: any = { name };
 
     if (currentUser.role === 'student') {
       userUpdates.university = roleField;
@@ -56,8 +62,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       userUpdates.represents = roleField;
     }
 
-    updateUser(userUpdates);
-    onClose();
+    try {
+      await updateUser(userUpdates);
+      onClose();
+    } catch (error: any) {
+      setSaveError(error.message || 'Failed to save profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -152,7 +164,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     leftIcon={<Building size={16} />}
                     value={roleField}
                     onChange={(e) => setRoleField(e.target.value)}
-                    disabled={currentUser.role === 'user' || currentUser.role === 'admin'}
+                    disabled={currentUser.role === 'simple_user' || currentUser.role === 'admin'}
                     className="disabled:bg-slate-50 disabled:text-slate-500"
                   />
                 </div>
@@ -298,19 +310,29 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <div className="p-4 sm:p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 sm:gap-3 shrink-0">
-          <Button
-            variant="ghost"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
+        <div className="p-4 sm:p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
+          {saveError && (
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
+              {saveError}
+            </div>
+          )}
+          <div className="flex justify-end gap-3 sm:gap-3">
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              disabled={isSaving}
+              leftIcon={isSaving ? <Loader2 size={18} className="animate-spin" /> : undefined}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
 
       </div>

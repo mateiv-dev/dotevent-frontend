@@ -5,7 +5,7 @@ interface BaseUser {
 }
 
 export interface NormalUser extends BaseUser {
-  role: "user";
+  role: "simple_user";
 }
 
 export interface Student extends BaseUser {
