@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building, Loader2 } from 'lucide-react';
+import { X, User, Bell, Palette, Shield, LogOut, Trash2, Key, Mail, Building, Loader2, ArrowUpCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Checkbox } from './ui/Checkbox';
+import RoleRequestModal from './RoleRequestModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [isRoleRequestOpen, setIsRoleRequestOpen] = useState(false);
 
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
@@ -154,20 +156,39 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                 <div className="pt-4 sm:pt-6 border-t border-slate-100">
                   <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">Role Information</h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Details specific to your role as {currentUser.role}.</p>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">Your current role: <span className="font-medium capitalize">{currentUser.role.replace('_', ' ')}</span></p>
 
-                  <Input
-                    label={currentUser.role === 'student' ? 'University / Department' :
-                      currentUser.role === 'organizer' ? 'Organization Name' :
+                  {(currentUser.role !== 'organizer' && currentUser.role !== 'admin') && (
+                    <Input
+                      label={currentUser.role === 'student' ? 'University / Department' :
                         currentUser.role === 'student_rep' ? 'Department / Faculty' :
                           'Organization'}
-                    leftIcon={<Building size={16} />}
-                    value={roleField}
-                    onChange={(e) => setRoleField(e.target.value)}
-                    disabled={currentUser.role === 'simple_user' || currentUser.role === 'admin'}
-                    className="disabled:bg-slate-50 disabled:text-slate-500"
-                  />
+                      leftIcon={<Building size={16} />}
+                      value={roleField}
+                      onChange={(e) => setRoleField(e.target.value)}
+                      disabled={currentUser.role === 'simple_user'}
+                      className="disabled:bg-slate-50 disabled:text-slate-500 mb-4"
+                    />
+                  )}
+
+                  {currentUser.role !== 'admin' && currentUser.role !== 'organizer' && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsRoleRequestOpen(true)}
+                      leftIcon={<ArrowUpCircle size={18} />}
+                      className="w-full"
+                    >
+                      Request Role Upgrade
+                    </Button>
+                  )}
                 </div>
+
+                <RoleRequestModal
+                  isOpen={isRoleRequestOpen}
+                  onClose={() => setIsRoleRequestOpen(false)}
+                  currentRole={currentUser.role}
+                />
               </div>
             )}
 
