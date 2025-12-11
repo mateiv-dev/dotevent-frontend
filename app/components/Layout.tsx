@@ -12,7 +12,9 @@ import {
   Trash2,
   Check,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Shield,
+  FileText
 } from 'lucide-react';
 
 import SettingsModal from './SettingsModal';
@@ -35,7 +37,9 @@ export default function Layout({
 
   const activeTab = pathname === '/dashboard' ? 'dashboard' :
     pathname === '/events/create' ? 'create' :
-      pathname.startsWith('/events') ? 'events' : '';
+      pathname === '/my-events' ? 'my-events' :
+        pathname === '/admin' ? 'admin' :
+          pathname.startsWith('/events') ? 'events' : '';
 
   const showBackButton = pathname.match(/^\/events\/\d+$/);
 
@@ -90,6 +94,24 @@ export default function Layout({
             >
               <Plus size={20} />
               Create Event
+            </Link>
+          )}
+          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+            <Link
+              href="/my-events"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'my-events' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <FileText size={20} />
+              My Events
+            </Link>
+          )}
+          {currentUser.role === 'admin' && (
+            <Link
+              href="/admin"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'admin' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            >
+              <Shield size={20} />
+              Admin
             </Link>
           )}
         </nav>
