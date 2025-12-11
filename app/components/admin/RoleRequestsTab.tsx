@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { apiClient } from '../../../lib/apiClient';
-import { Button } from '../ui/Button';
-import { Check, X, Loader2, User, Building, GraduationCap, FileText } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { apiClient } from "../../../lib/apiClient";
+import { Button } from "../ui/Button";
+import {
+  Check,
+  X,
+  Loader2,
+  User,
+  Building,
+  GraduationCap,
+  FileText,
+} from "lucide-react";
 
 interface RoleRequest {
   _id: string;
@@ -29,14 +37,14 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
   const [requests, setRequests] = useState<RoleRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const fetchRequests = async () => {
     try {
-      const data = await apiClient.get<RoleRequest[]>('/api/requests');
+      const data = await apiClient.get<RoleRequest[]>("/api/requests");
       setRequests(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load requests');
+      setError(err.message || "Failed to load requests");
     } finally {
       setLoading(false);
     }
@@ -53,7 +61,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
       await fetchRequests();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || 'Failed to approve request');
+      setError(err.message || "Failed to approve request");
     } finally {
       setActionLoading(null);
     }
@@ -66,7 +74,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
       await fetchRequests();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || 'Failed to reject request');
+      setError(err.message || "Failed to reject request");
     } finally {
       setActionLoading(null);
     }
@@ -108,25 +116,29 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <User size={18} className="text-slate-400" />
-                <span className="font-medium text-slate-900">{request.user?.name || 'Unknown User'}</span>
-                <span className="text-sm text-slate-500">({request.user?.email})</span>
+                <span className="font-medium text-slate-900">
+                  {request.user?.name || "Unknown User"}
+                </span>
+                <span className="text-sm text-slate-500">
+                  ({request.user?.email})
+                </span>
               </div>
 
               <div className="flex items-center gap-2 mb-2">
                 <GraduationCap size={16} className="text-blue-500" />
                 <span className="text-sm font-medium text-blue-600 capitalize">
-                  Requesting: {request.requestedRole.replace('_', ' ')}
+                  Requesting: {request.requestedRole.replace("_", " ")}
                 </span>
               </div>
 
-              {request.requestedRole === 'student_rep' && (
+              {request.requestedRole === "student_rep" && (
                 <div className="text-sm text-slate-600 mb-2">
                   <Building size={14} className="inline mr-1" />
                   {request.university} - {request.represents}
                 </div>
               )}
 
-              {request.requestedRole === 'organizer' && (
+              {request.requestedRole === "organizer" && (
                 <div className="text-sm text-slate-600 mb-2">
                   <Building size={14} className="inline mr-1" />
                   {request.organizationName}
@@ -149,7 +161,13 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
                 variant="primary"
                 onClick={() => handleApprove(request._id)}
                 disabled={actionLoading === request._id}
-                leftIcon={actionLoading === request._id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                leftIcon={
+                  actionLoading === request._id ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Check size={14} />
+                  )
+                }
               >
                 Approve
               </Button>

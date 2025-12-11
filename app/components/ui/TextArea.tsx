@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -7,13 +7,10 @@ interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({
-    className = '',
-    containerClassName = '',
-    label,
-    error,
-    ...props
-  }, ref) => {
+  (
+    { className = "", containerClassName = "", label, error, ...props },
+    ref,
+  ) => {
     return (
       <div className={containerClassName}>
         {label && (
@@ -27,17 +24,15 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
             w-full px-4 py-3 rounded-xl border border-slate-200 
             focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 
             outline-none transition-all resize-none font-medium text-slate-600 placeholder:font-normal
-            ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''}
+            ${error ? "border-red-300 focus:border-red-500 focus:ring-red-500/10" : ""}
             ${className}
           `}
           {...props}
         />
-        {error && (
-          <p className="mt-1 text-sm text-red-500">{error}</p>
-        )}
+        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 TextArea.displayName = "TextArea";

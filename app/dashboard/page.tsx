@@ -1,28 +1,26 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useApp } from '../context/AppContext';
-import DashboardView from '../components/DashboardView';
-import Layout from '../components/Layout';
+import { useRouter } from "next/navigation";
+import { useApp } from "../context/AppContext";
+import DashboardView from "../components/DashboardView";
+import Layout from "../components/Layout";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { currentUser, events } = useApp();
 
-  const registeredCount = events.filter(e => e.isRegistered).length;
+  const registeredCount = events.filter((e) => e.isRegistered).length;
 
   const handleEventClick = (id: string) => {
     router.push(`/events/${id}`);
   };
 
   const toEvents = () => {
-    router.push('/events');
+    router.push("/events");
   };
 
   return (
-    <Layout
-      pageTitle="Student Dashboard"
-    >
+    <Layout pageTitle="Student Dashboard">
       {currentUser && (
         <DashboardView
           currentUser={currentUser}

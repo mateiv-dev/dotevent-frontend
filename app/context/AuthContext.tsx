@@ -1,12 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import {
   onAuthStateChanged,
   User,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut as firebaseSignOut
+  signOut as firebaseSignOut,
 } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { apiClient } from "../../lib/apiClient";
@@ -23,10 +29,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  signIn: async () => { },
-  signUp: async () => { },
-  signOut: async () => { },
-  deleteAccount: async () => { },
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  deleteAccount: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -57,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, profileData: any) => {
     if (!auth) throw new Error("Firebase is not configured.");
     await createUserWithEmailAndPassword(auth, email, password);
-    await apiClient.post('/api/users/register', profileData);
+    await apiClient.post("/api/users/register", profileData);
   };
 
   const signOut = async () => {
@@ -68,12 +74,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const deleteAccount = async () => {
     if (!auth || !auth.currentUser) return;
     const user = auth.currentUser;
-    await apiClient.delete('/api/users/me');
+    await apiClient.delete("/api/users/me");
     await user.delete();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, deleteAccount }}>
+    <AuthContext.Provider
+      value={{ user, loading, signIn, signUp, signOut, deleteAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );

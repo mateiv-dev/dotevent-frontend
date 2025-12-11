@@ -1,10 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { apiClient } from '../../../lib/apiClient';
-import { Button } from '../ui/Button';
-import { Check, X, Loader2, Calendar, MapPin, Users, FileText } from 'lucide-react';
-import { getCategoryStyles } from '../../utils/categoryStyles';
+import { useState, useEffect } from "react";
+import { apiClient } from "../../../lib/apiClient";
+import { Button } from "../ui/Button";
+import {
+  Check,
+  X,
+  Loader2,
+  Calendar,
+  MapPin,
+  Users,
+  FileText,
+} from "lucide-react";
+import { getCategoryStyles } from "../../utils/categoryStyles";
 
 interface PendingEvent {
   _id: string;
@@ -28,16 +36,16 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
   const [events, setEvents] = useState<PendingEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [rejectingId, setRejectingId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const fetchEvents = async () => {
     try {
-      const data = await apiClient.get<PendingEvent[]>('/api/events/pending');
+      const data = await apiClient.get<PendingEvent[]>("/api/events/pending");
       setEvents(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load pending events');
+      setError(err.message || "Failed to load pending events");
     } finally {
       setLoading(false);
     }
@@ -54,7 +62,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
       await fetchEvents();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || 'Failed to approve event');
+      setError(err.message || "Failed to approve event");
     } finally {
       setActionLoading(null);
     }
@@ -62,18 +70,18 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
 
   const handleReject = async (id: string) => {
     if (!rejectionReason.trim()) {
-      setError('Please provide a rejection reason');
+      setError("Please provide a rejection reason");
       return;
     }
     setActionLoading(id);
     try {
       await apiClient.post(`/api/events/${id}/reject`, { rejectionReason });
       setRejectingId(null);
-      setRejectionReason('');
+      setRejectionReason("");
       await fetchEvents();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || 'Failed to reject event');
+      setError(err.message || "Failed to reject event");
     } finally {
       setActionLoading(null);
     }
@@ -120,11 +128,15 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
             key={event._id}
             className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
           >
-            <div className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`} />
+            <div
+              className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`}
+            />
             <div className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-slate-900 mb-2">{event.title}</h3>
+                  <h3 className="font-semibold text-lg text-slate-900 mb-2">
+                    {event.title}
+                  </h3>
 
                   <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-3">
                     <span className="flex items-center gap-1">
@@ -142,7 +154,8 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                   </div>
 
                   <div className="text-sm text-slate-500 mb-2">
-                    <span className="font-medium">Organizer:</span> {event.organizer}
+                    <span className="font-medium">Organizer:</span>{" "}
+                    {event.organizer}
                   </div>
 
                   <div className="text-sm text-slate-500 flex items-start gap-1">
@@ -151,11 +164,14 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                   </div>
 
                   <div className="flex items-center gap-2 mt-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryStyles.bg} ${categoryStyles.text}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${categoryStyles.bg} ${categoryStyles.text}`}
+                    >
                       {event.category}
                     </span>
                     <span className="text-xs text-slate-400">
-                      Submitted: {new Date(event.createdAt).toLocaleDateString()}
+                      Submitted:{" "}
+                      {new Date(event.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -167,7 +183,13 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                       variant="primary"
                       onClick={() => handleApprove(event._id)}
                       disabled={actionLoading === event._id}
-                      leftIcon={actionLoading === event._id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                      leftIcon={
+                        actionLoading === event._id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Check size={14} />
+                        )
+                      }
                     >
                       Approve
                     </Button>
@@ -202,7 +224,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                       variant="ghost"
                       onClick={() => {
                         setRejectingId(null);
-                        setRejectionReason('');
+                        setRejectionReason("");
                       }}
                     >
                       Cancel
@@ -212,7 +234,13 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                       variant="danger"
                       onClick={() => handleReject(event._id)}
                       disabled={actionLoading === event._id}
-                      leftIcon={actionLoading === event._id ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                      leftIcon={
+                        actionLoading === event._id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <X size={14} />
+                        )
+                      }
                     >
                       Confirm Reject
                     </Button>

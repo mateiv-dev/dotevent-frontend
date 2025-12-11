@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useApp } from '../context/AppContext';
-import EventListView from '../components/EventListView';
-import Layout from '../components/Layout';
+import { useRouter } from "next/navigation";
+import { useApp } from "../context/AppContext";
+import EventListView from "../components/EventListView";
+import Layout from "../components/Layout";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -19,17 +19,17 @@ export default function EventsPage() {
     router.push(`/events/${id}`);
   };
 
-  const filteredEvents = events.filter(e => {
-    const matchesSearch = e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredEvents = events.filter((e) => {
+    const matchesSearch =
+      e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All Categories' || e.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "All Categories" || e.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
-    <Layout
-      pageTitle="Upcoming Events"
-    >
+    <Layout pageTitle="Upcoming Events">
       <EventListView
         events={filteredEvents}
         searchTerm={searchTerm}

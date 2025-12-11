@@ -1,16 +1,31 @@
-import { Search, Calendar, MapPin, Users, Filter } from 'lucide-react';
-import Event from '../types/event';
-import { useApp } from '../context/AppContext';
-import { getCategoryStyles } from '../utils/categoryStyles';
+import { Search, Calendar, MapPin, Users, Filter } from "lucide-react";
+import Event from "../types/event";
+import { useApp } from "../context/AppContext";
+import { getCategoryStyles } from "../utils/categoryStyles";
 
-function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, onEventClick }: { events: Event[], searchTerm: string, setSearchTerm: (term: string) => void, toggleRegistration: (id: string) => void, onEventClick: (id: string) => void }) {
+function EventListView({
+  events,
+  searchTerm,
+  setSearchTerm,
+  toggleRegistration,
+  onEventClick,
+}: {
+  events: Event[];
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  toggleRegistration: (id: string) => void;
+  onEventClick: (id: string) => void;
+}) {
   const { selectedCategory, setSelectedCategory } = useApp();
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Search events by title or category..."
@@ -36,8 +51,20 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
             <Filter className="text-slate-400 shrink-0" size={20} />
             <span className="truncate">{selectedCategory}</span>
             <div className="ml-auto lg:ml-0 text-slate-400 shrink-0">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.5 4.5L6 8L9.5 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
           </div>
@@ -49,12 +76,18 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
           <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
             <Search size={40} className="text-slate-300" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">No events found</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">
+            No events found
+          </h3>
           <p className="text-slate-500 max-w-sm">
-            We couldn't find any events matching your search criteria. Try adjusting your filters or search term.
+            We couldn't find any events matching your search criteria. Try
+            adjusting your filters or search term.
           </p>
           <button
-            onClick={() => { setSearchTerm(''); setSelectedCategory('All Categories'); }}
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedCategory("All Categories");
+            }}
             className="mt-6 text-blue-600 font-semibold hover:text-blue-700 cursor-pointer"
           >
             Clear all filters
@@ -69,7 +102,9 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
               className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer h-full"
             >
               <div className="h-32 relative overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryStyles(event.category).gradient}`}></div>
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${getCategoryStyles(event.category).gradient}`}
+                ></div>
                 <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 uppercase tracking-wide shadow-sm">
                   {event.category}
                 </div>
@@ -77,7 +112,9 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
 
               <div className="p-6 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-xl text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">{event.title}</h3>
+                  <h3 className="font-bold text-xl text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">
+                    {event.title}
+                  </h3>
                 </div>
 
                 <div className="space-y-3 text-sm text-slate-500 mb-6 flex-1">
@@ -85,7 +122,14 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
                       <Calendar size={16} />
                     </div>
-                    <span className="font-medium text-slate-700">{new Date(event.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} • {event.time}</span>
+                    <span className="font-medium text-slate-700">
+                      {new Date(event.date).toLocaleDateString(undefined, {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      • {event.time}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
@@ -97,7 +141,9 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
                       <Users size={16} />
                     </div>
-                    <span>{event.attendees} / {event.capacity} attendees</span>
+                    <span>
+                      {event.attendees} / {event.capacity} attendees
+                    </span>
                   </div>
                 </div>
 
@@ -107,17 +153,31 @@ function EventListView({ events, searchTerm, setSearchTerm, toggleRegistration, 
                       e.stopPropagation();
                       toggleRegistration(event.id);
                     }}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${event.isRegistered
-                      ? 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30'
-                      }`}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                      event.isRegistered
+                        ? "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30"
+                    }`}
                   >
                     {event.isRegistered ? (
                       <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                         <span>Registered</span>
                       </>
-                    ) : 'Register Now'}
+                    ) : (
+                      "Register Now"
+                    )}
                   </button>
                 </div>
               </div>

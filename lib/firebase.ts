@@ -10,7 +10,12 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : (firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null);
+const app =
+  getApps().length > 0
+    ? getApp()
+    : firebaseConfig.apiKey
+      ? initializeApp(firebaseConfig)
+      : null;
 const auth = app ? getAuth(app) : null;
 
 export const getCurrentUser = () => {

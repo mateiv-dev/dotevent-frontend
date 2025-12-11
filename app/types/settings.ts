@@ -5,8 +5,8 @@ export interface NotificationSettings {
 }
 
 export interface AppearanceSettings {
-  theme: 'light' | 'dark';
-  language: 'en' | 'ro';
+  theme: "light" | "dark";
+  language: "en" | "ro";
 }
 
 export interface UserSettings {
@@ -21,7 +21,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     eventUpdates: true,
   },
   appearance: {
-    theme: 'light',
-    language: 'en',
+    theme: "light",
+    language: "en",
   },
 };

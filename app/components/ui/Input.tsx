@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,15 +9,18 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({
-    className = '',
-    containerClassName = '',
-    label,
-    error,
-    leftIcon,
-    rightIcon,
-    ...props
-  }, ref) => {
+  (
+    {
+      className = "",
+      containerClassName = "",
+      label,
+      error,
+      leftIcon,
+      rightIcon,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <div className={containerClassName}>
         {label && (
@@ -37,9 +40,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               w-full px-4 py-3 rounded-xl border border-slate-200 
               focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 
               outline-none transition-all font-medium text-slate-600 placeholder:font-normal
-              ${leftIcon ? 'pl-11' : ''}
-              ${rightIcon ? 'pr-11' : ''}
-              ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''}
+              ${leftIcon ? "pl-11" : ""}
+              ${rightIcon ? "pr-11" : ""}
+              ${error ? "border-red-300 focus:border-red-500 focus:ring-red-500/10" : ""}
               ${className}
             `}
             {...props}
@@ -50,12 +53,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
-        {error && (
-          <p className="mt-1 text-sm text-red-500">{error}</p>
-        )}
+        {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";

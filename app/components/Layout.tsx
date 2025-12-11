@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, ReactNode } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useApp } from '../context/AppContext';
+import { useState, useEffect, ReactNode } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useApp } from "../context/AppContext";
 import {
   Calendar,
   Plus,
@@ -14,38 +14,49 @@ import {
   X,
   ArrowLeft,
   Shield,
-  FileText
-} from 'lucide-react';
+  FileText,
+} from "lucide-react";
 
-import SettingsModal from './SettingsModal';
+import SettingsModal from "./SettingsModal";
 
 interface LayoutProps {
   children: ReactNode;
   pageTitle: string;
 }
 
-export default function Layout({
-  children,
-  pageTitle,
-}: LayoutProps) {
+export default function Layout({ children, pageTitle }: LayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, isLoading, notifications, markAsRead, deleteNotification, markAllAsRead } = useApp();
+  const {
+    currentUser,
+    isLoading,
+    notifications,
+    markAsRead,
+    deleteNotification,
+    markAllAsRead,
+  } = useApp();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const activeTab = pathname === '/dashboard' ? 'dashboard' :
-    pathname === '/events/create' ? 'create' :
-      pathname === '/my-events' ? 'my-events' :
-        pathname === '/admin' ? 'admin' :
-          pathname.startsWith('/events') ? 'events' : '';
+  const activeTab =
+    pathname === "/dashboard"
+      ? "dashboard"
+      : pathname === "/events/create"
+        ? "create"
+        : pathname === "/my-events"
+          ? "my-events"
+          : pathname === "/admin"
+            ? "admin"
+            : pathname.startsWith("/events")
+              ? "events"
+              : "";
 
   const showBackButton = pathname.match(/^\/events\/\d+$/);
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isLoading, currentUser, router]);
 
@@ -59,7 +70,10 @@ export default function Layout({
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
 
       <aside className="w-64 bg-slate-900 text-white flex-col hidden lg:flex z-10">
         <div className="p-6 border-b border-slate-800">
@@ -75,40 +89,40 @@ export default function Layout({
         <nav className="flex-1 p-4 space-y-2">
           <Link
             href="/dashboard"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
           >
             <LayoutDashboard size={20} />
             Dashboard
           </Link>
           <Link
             href="/events"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'events' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
           >
             <Calendar size={20} />
             Browse Events
           </Link>
-          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
             <Link
               href="/events/create"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'create' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "create" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
             >
               <Plus size={20} />
               Create Event
             </Link>
           )}
-          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
             <Link
               href="/my-events"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'my-events' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "my-events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
             >
               <FileText size={20} />
               My Events
             </Link>
           )}
-          {currentUser.role === 'admin' && (
+          {currentUser.role === "admin" && (
             <Link
               href="/admin"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'admin' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "admin" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
             >
               <Shield size={20} />
               Admin
@@ -141,7 +155,7 @@ export default function Layout({
             <div className="relative">
               <button
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className={`p-2 rounded-full relative transition-colors ${isNotifOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                className={`p-2 rounded-full relative transition-colors ${isNotifOpen ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-slate-100"}`}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
@@ -151,35 +165,86 @@ export default function Layout({
 
               {isNotifOpen && (
                 <>
-                  <div className="fixed inset-0 z-40 bg-black/10 lg:hidden" onClick={() => setIsNotifOpen(false)} />
+                  <div
+                    className="fixed inset-0 z-40 bg-black/10 lg:hidden"
+                    onClick={() => setIsNotifOpen(false)}
+                  />
                   <div className="fixed top-16 left-4 right-4 z-50 lg:absolute lg:top-full lg:right-0 lg:left-auto lg:w-96 mt-2 lg:mt-3 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="font-semibold text-slate-900">Notifications</h3>
+                      <h3 className="font-semibold text-slate-900">
+                        Notifications
+                      </h3>
                       <div className="flex gap-3">
-                        {unreadCount > 0 && <button onClick={markAllAsRead} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Mark all read</button>}
-                        <button onClick={() => setIsNotifOpen(false)} className="lg:hidden text-slate-400 cursor-pointer"><X size={18} /></button>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setIsNotifOpen(false)}
+                          className="lg:hidden text-slate-400 cursor-pointer"
+                        >
+                          <X size={18} />
+                        </button>
                       </div>
                     </div>
                     <div className="max-h-[60vh] lg:max-h-[400px] overflow-y-auto">
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center text-slate-500 text-sm">
-                          <Bell size={32} className="mx-auto mb-3 text-slate-300 opacity-50" />
+                          <Bell
+                            size={32}
+                            className="mx-auto mb-3 text-slate-300 opacity-50"
+                          />
                           <p>No notifications yet</p>
                         </div>
                       ) : (
                         notifications.map((notif) => (
-                          <div key={notif.id} className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 group ${notif.isRead ? 'opacity-75' : 'bg-blue-50/30'}`}>
-                            <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${notif.isRead ? 'bg-slate-300' : 'bg-blue-500'}`} />
+                          <div
+                            key={notif.id}
+                            className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 group ${notif.isRead ? "opacity-75" : "bg-blue-50/30"}`}
+                          >
+                            <div
+                              className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${notif.isRead ? "bg-slate-300" : "bg-blue-500"}`}
+                            />
                             <div className="flex-1 space-y-1">
                               <div className="flex justify-between items-start gap-2">
-                                <p className={`text-sm ${notif.isRead ? 'text-slate-600 font-medium' : 'text-slate-900 font-bold'}`}>{notif.title}</p>
-                                <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">{notif.time}</span>
+                                <p
+                                  className={`text-sm ${notif.isRead ? "text-slate-600 font-medium" : "text-slate-900 font-bold"}`}
+                                >
+                                  {notif.title}
+                                </p>
+                                <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
+                                  {notif.time}
+                                </span>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed">{notif.message}</p>
+                              <p className="text-xs text-slate-500 leading-relaxed">
+                                {notif.message}
+                              </p>
                             </div>
                             <div className="flex flex-col gap-1 justify-center pl-2 border-l border-slate-100 ml-1">
-                              {!notif.isRead && <button onClick={(e) => { e.stopPropagation(); markAsRead(notif.id); }} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Check size={14} /></button>}
-                              <button onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                              {!notif.isRead && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(notif.id);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                >
+                                  <Check size={14} />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notif.id);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                           </div>
                         ))
@@ -195,13 +260,19 @@ export default function Layout({
               className="flex items-center gap-3 p-2 sm:pl-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left"
             >
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-slate-900">{currentUser.name}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {currentUser.name}
+                </p>
                 <p className="text-xs text-slate-500">
-                  {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
+                  {currentUser.role.charAt(0).toUpperCase() +
+                    currentUser.role.slice(1)}
                 </p>
               </div>
               <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
-                {currentUser.name.split(' ').map(n => n[0]).join('')}
+                {currentUser.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </div>
             </button>
           </div>
@@ -216,7 +287,7 @@ export default function Layout({
         <div className="flex h-14 w-full">
           <Link
             href="/dashboard"
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'dashboard' ? 'text-blue-400' : 'text-slate-400'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === "dashboard" ? "text-blue-400" : "text-slate-400"}`}
           >
             <LayoutDashboard size={20} />
             <span className="text-[10px] font-medium">Dash</span>
@@ -224,16 +295,16 @@ export default function Layout({
 
           <Link
             href="/events"
-            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'events' ? 'text-blue-400' : 'text-slate-400'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === "events" ? "text-blue-400" : "text-slate-400"}`}
           >
             <Calendar size={20} />
             <span className="text-[10px] font-medium">Events</span>
           </Link>
 
-          {['student_rep', 'organizer', 'admin'].includes(currentUser.role) && (
+          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
             <Link
               href="/events/create"
-              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'create' ? 'text-blue-400' : 'text-slate-400'}`}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === "create" ? "text-blue-400" : "text-slate-400"}`}
             >
               <Plus size={20} />
               <span className="text-[10px] font-medium">Create</span>
