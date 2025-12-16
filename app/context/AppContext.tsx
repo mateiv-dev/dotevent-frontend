@@ -54,7 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const { user: firebaseUser, loading: authLoading } = useAuth();
+  const { user: firebaseUser, loading: authLoading, signOut } = useAuth();
 
   const fetchEvents = useCallback(async () => {
     setEventsLoading(true);
@@ -114,6 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setTimeout(() => fetchUser(retries - 1, delay), delay);
             return;
           } else {
+            await signOut();
             setCurrentUser(null);
             setUserLoading(false);
           }
