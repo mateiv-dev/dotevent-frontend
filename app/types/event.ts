@@ -10,8 +10,10 @@ export default interface Event {
   attendees: number;
   capacity: number;
   isRegistered?: boolean;
+  ticketCode?: string;
   organizer: string;
   description: string;
   status?: EventStatus;
   rejectionReason?: string;
+  images?: string[];
 }

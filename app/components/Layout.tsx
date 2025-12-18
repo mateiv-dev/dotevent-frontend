@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Shield,
   FileText,
+  ClipboardList,
 } from "lucide-react";
 
 import SettingsModal from "./SettingsModal";
@@ -119,6 +120,13 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
               My Events
             </Link>
           )}
+          <Link
+            href="/my-requests"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/my-requests" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+          >
+            <ClipboardList size={20} />
+            My Requests
+          </Link>
           {currentUser.role === "admin" && (
             <Link
               href="/admin"

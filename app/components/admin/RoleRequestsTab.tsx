@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "../../../lib/apiClient";
+import { apiClient, APIError } from "../../../lib/apiClient";
 import { Button } from "../ui/Button";
+import RejectionReasonModal from "./RejectionReasonModal";
 import {
   Check,
   X,
@@ -38,6 +39,8 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<RoleRequest | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -61,20 +64,37 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
       await fetchRequests();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || "Failed to approve request");
+      const message = err instanceof APIError
+        ? err.getUserFriendlyMessage()
+        : "Failed to approve request";
+      setError(message);
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleReject = async (id: string) => {
-    setActionLoading(id);
+  const handleRejectClick = (request: RoleRequest) => {
+    setSelectedRequest(request);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (rejectionReason: string) => {
+    if (!selectedRequest) return;
+
+    setActionLoading(selectedRequest._id);
     try {
-      await apiClient.post(`/api/requests/${id}/reject`, {});
+      await apiClient.post(`/api/requests/${selectedRequest._id}/reject`, {
+        rejectionReason,
+      });
       await fetchRequests();
       onAction?.();
+      setRejectModalOpen(false);
+      setSelectedRequest(null);
     } catch (err: any) {
-      setError(err.message || "Failed to reject request");
+      const message = err instanceof APIError
+        ? err.getUserFriendlyMessage()
+        : "Failed to reject request";
+      setError(message);
     } finally {
       setActionLoading(null);
     }
@@ -174,7 +194,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
               <Button
                 size="sm"
                 variant="danger"
-                onClick={() => handleReject(request._id)}
+                onClick={() => handleRejectClick(request)}
                 disabled={actionLoading === request._id}
                 leftIcon={<X size={14} />}
               >
@@ -184,6 +204,18 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
           </div>
         </div>
       ))}
+
+      <RejectionReasonModal
+        isOpen={rejectModalOpen}
+        onClose={() => {
+          setRejectModalOpen(false);
+          setSelectedRequest(null);
+        }}
+        onSubmit={handleRejectConfirm}
+        title="Reject Role Request"
+        itemName={selectedRequest ? `${selectedRequest.user?.name} - ${selectedRequest.requestedRole.replace("_", " ")}` : undefined}
+        isSubmitting={actionLoading === selectedRequest?._id}
+      />
     </div>
   );
 }

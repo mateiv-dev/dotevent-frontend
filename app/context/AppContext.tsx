@@ -16,6 +16,7 @@ import { UserSettings, DEFAULT_SETTINGS } from "../types/settings";
 import { INITIAL_NOTIFICATIONS } from "../data/mockData";
 import { useAuth } from "./AuthContext";
 import { apiClient } from "../../lib/apiClient";
+import { uploadClient } from "../../lib/uploadClient";
 
 interface AppContextType {
   currentUser: User | null;
@@ -24,8 +25,9 @@ interface AppContextType {
   updateUser: (updates: Partial<User>) => Promise<void>;
   events: Event[];
   refreshEvents: () => Promise<void>;
-  toggleRegistration: (id: string) => void;
-  createEvent: (newEvent: any) => Promise<boolean>;
+  registerForEvent: (eventId: string) => Promise<string>;
+  unregisterFromEvent: (eventId: string) => Promise<void>;
+  createEvent: (newEvent: any, files?: File[]) => Promise<boolean>;
 
   notifications: Notification[];
   markAsRead: (id: number) => void;
@@ -46,15 +48,45 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>(
-    INITIAL_NOTIFICATIONS,
-  );
+  const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const { user: firebaseUser, loading: authLoading, signOut } = useAuth();
+
+  const fetchUserRegistrations = useCallback(async () => {
+    if (!firebaseUser) {
+      setRegisteredEventIds(new Set());
+      return;
+    }
+
+    try {
+      const registeredEvents = await apiClient.get<any[]>("/api/users/me/events");
+      const eventIds = new Set(registeredEvents.map((event: any) => event._id || event.id));
+      setRegisteredEventIds(eventIds);
+    } catch (error) {
+      console.error("Failed to fetch user registrations:", error);
+      setRegisteredEventIds(new Set());
+    }
+  }, [firebaseUser]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!firebaseUser) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      const notificationsData = await apiClient.get<any[]>("/api/notifications");
+      setNotifications(notificationsData);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      setNotifications([]);
+    }
+  }, [firebaseUser]);
 
   const fetchEvents = useCallback(async () => {
     setEventsLoading(true);
@@ -75,7 +107,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         description: event.description,
         status: event.status,
         rejectionReason: event.rejectionReason,
-        isRegistered: false, // TODO: Implement registration tracking when backend supports it
+        isRegistered: registeredEventIds.has(event._id || event.id),
       }));
       setEvents(mappedEvents);
     } catch (error) {
@@ -84,7 +116,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setEventsLoading(false);
     }
-  }, []);
+  }, [registeredEventIds]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      fetchUserRegistrations();
+      fetchNotifications();
+    }
+  }, [authLoading, fetchUserRegistrations, fetchNotifications]);
+
+  useEffect(() => {
+    if (!firebaseUser) return;
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [firebaseUser, fetchNotifications]);
 
   useEffect(() => {
     fetchEvents();
@@ -103,6 +152,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
             id: userData.firebaseId || userData._id,
           };
           setCurrentUser(mappedUser);
+
+          if (firebaseUser.email && firebaseUser.email !== userData.email) {
+            try {
+              await apiClient.put("/api/users/me/update-email", {});
+              const updatedUserData = await apiClient.get<any>("/api/users/me");
+              const updatedMappedUser: User = {
+                ...updatedUserData,
+                id: updatedUserData.firebaseId || updatedUserData._id,
+              };
+              setCurrentUser(updatedMappedUser);
+            } catch (emailSyncError) {
+              console.error("Failed to sync email:", emailSyncError);
+            }
+          }
+
           setUserLoading(false);
         } catch (error: any) {
           const is404 =
@@ -174,23 +238,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const toggleRegistration = useCallback((id: string) => {
-    setEvents((prevEvents) =>
-      prevEvents.map((ev) => {
-        if (ev.id === id) {
-          return {
-            ...ev,
-            isRegistered: !ev.isRegistered,
-            attendees: ev.isRegistered ? ev.attendees - 1 : ev.attendees + 1,
-          };
-        }
-        return ev;
-      }),
-    );
+  const registerForEvent = useCallback(async (eventId: string): Promise<string> => {
+    try {
+      const ticketCode = await apiClient.post<string>(`/api/events/${eventId}/register`, {});
+
+      setRegisteredEventIds((prev) => new Set(prev).add(eventId));
+
+      setEvents((prevEvents) =>
+        prevEvents.map((ev) => {
+          if (ev.id === eventId) {
+            return {
+              ...ev,
+              isRegistered: true,
+              ticketCode: ticketCode,
+              attendees: ev.attendees + 1,
+            };
+          }
+          return ev;
+        }),
+      );
+
+      return ticketCode;
+    } catch (error) {
+      console.error("Failed to register for event:", error);
+      throw error;
+    }
+  }, []);
+
+  const unregisterFromEvent = useCallback(async (eventId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/api/events/${eventId}/register`);
+
+      setRegisteredEventIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(eventId);
+        return newSet;
+      });
+
+      setEvents((prevEvents) =>
+        prevEvents.map((ev) => {
+          if (ev.id === eventId) {
+            return {
+              ...ev,
+              isRegistered: false,
+              ticketCode: undefined,
+              attendees: Math.max(0, ev.attendees - 1),
+            };
+          }
+          return ev;
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to unregister from event:", error);
+      throw error;
+    }
   }, []);
 
   const createEvent = useCallback(
-    async (newEvent: any): Promise<boolean> => {
+    async (newEvent: any, files: File[] = []): Promise<boolean> => {
       try {
         const eventData = {
           title: newEvent.title,
@@ -203,7 +308,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           description: newEvent.description,
         };
 
-        await apiClient.post("/api/events", eventData);
+        if (files.length > 0) {
+          await uploadClient.uploadEventWithFiles("/api/events", eventData, files);
+        } else {
+          await apiClient.post("/api/events", eventData);
+        }
 
         await fetchEvents();
 
@@ -220,22 +329,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await fetchEvents();
   }, [fetchEvents]);
 
-  const markAsRead = useCallback((id: number) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
-  }, []);
+  const markAsRead = useCallback(async (id: string | number) => {
+    try {
+      const notificationId = typeof id === 'string' ? id : notifications.find(n => n.id === id)?._id;
+      if (!notificationId) return;
 
-  const deleteNotification = useCallback((id: number) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.filter((n) => n.id !== id),
-    );
-  }, []);
+      await apiClient.put(`/api/notifications/${notificationId}/read`, {});
 
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((n) => ({ ...n, isRead: true })),
-    );
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((n) => (n._id === notificationId ? { ...n, isRead: true } : n)),
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  }, [notifications]);
+
+  const deleteNotification = useCallback(async (id: string | number) => {
+    try {
+      const notificationId = typeof id === 'string' ? id : notifications.find(n => n.id === id)?._id;
+      if (!notificationId) return;
+
+      await apiClient.delete(`/api/notifications/${notificationId}`);
+
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((n) => n._id !== notificationId),
+      );
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+    }
+  }, [notifications]);
+
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await apiClient.put("/api/notifications/read-all", {});
+
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((n) => ({ ...n, isRead: true })),
+      );
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
   }, []);
 
   const value = useMemo(
@@ -246,7 +379,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateUser,
       events,
       refreshEvents,
-      toggleRegistration,
+      registerForEvent,
+      unregisterFromEvent,
       createEvent,
       notifications,
       markAsRead,
@@ -265,7 +399,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       events,
       eventsLoading,
       refreshEvents,
-      toggleRegistration,
+      registerForEvent,
+      unregisterFromEvent,
       createEvent,
       notifications,
       markAsRead,

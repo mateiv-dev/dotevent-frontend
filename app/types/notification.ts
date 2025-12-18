@@ -1,7 +1,10 @@
 export default interface Notification {
-  id: number;
+  _id: string;
+  id?: number;
   title: string;
   message: string;
-  time: string;
+  time?: string;
   isRead: boolean;
+  type?: string;
+  createdAt?: string;
 }

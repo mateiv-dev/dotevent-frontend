@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiClient } from "../../../lib/apiClient";
+import { apiClient, APIError } from "../../../lib/apiClient";
 import { Button } from "../ui/Button";
+import RejectionReasonModal from "./RejectionReasonModal";
 import {
   Check,
   X,
@@ -37,8 +38,8 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [rejectingId, setRejectingId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<PendingEvent | null>(null);
 
   const fetchEvents = async () => {
     try {
@@ -62,26 +63,37 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
       await fetchEvents();
       onAction?.();
     } catch (err: any) {
-      setError(err.message || "Failed to approve event");
+      const message = err instanceof APIError
+        ? err.getUserFriendlyMessage()
+        : "Failed to approve event";
+      setError(message);
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleReject = async (id: string) => {
-    if (!rejectionReason.trim()) {
-      setError("Please provide a rejection reason");
-      return;
-    }
-    setActionLoading(id);
+  const handleRejectClick = (event: PendingEvent) => {
+    setSelectedEvent(event);
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = async (rejectionReason: string) => {
+    if (!selectedEvent) return;
+
+    setActionLoading(selectedEvent._id);
     try {
-      await apiClient.post(`/api/events/${id}/reject`, { rejectionReason });
-      setRejectingId(null);
-      setRejectionReason("");
+      await apiClient.post(`/api/events/${selectedEvent._id}/reject`, {
+        rejectionReason,
+      });
       await fetchEvents();
       onAction?.();
+      setRejectModalOpen(false);
+      setSelectedEvent(null);
     } catch (err: any) {
-      setError(err.message || "Failed to reject event");
+      const message = err instanceof APIError
+        ? err.getUserFriendlyMessage()
+        : "Failed to reject event";
+      setError(message);
     } finally {
       setActionLoading(null);
     }
@@ -176,81 +188,49 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                   </div>
                 </div>
 
-                {rejectingId !== event._id && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => handleApprove(event._id)}
-                      disabled={actionLoading === event._id}
-                      leftIcon={
-                        actionLoading === event._id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Check size={14} />
-                        )
-                      }
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => setRejectingId(event._id)}
-                      disabled={actionLoading === event._id}
-                      leftIcon={<X size={14} />}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {rejectingId === event._id && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Rejection Reason
-                  </label>
-                  <textarea
-                    className="w-full border border-slate-200 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows={3}
-                    placeholder="Explain why this event is being rejected..."
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                  />
-                  <div className="flex justify-end gap-2 mt-3">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setRejectingId(null);
-                        setRejectionReason("");
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => handleReject(event._id)}
-                      disabled={actionLoading === event._id}
-                      leftIcon={
-                        actionLoading === event._id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <X size={14} />
-                        )
-                      }
-                    >
-                      Confirm Reject
-                    </Button>
-                  </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => handleApprove(event._id)}
+                    disabled={actionLoading === event._id}
+                    leftIcon={
+                      actionLoading === event._id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Check size={14} />
+                      )
+                    }
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => handleRejectClick(event)}
+                    disabled={actionLoading === event._id}
+                    leftIcon={<X size={14} />}
+                  >
+                    Reject
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         );
       })}
+
+      <RejectionReasonModal
+        isOpen={rejectModalOpen}
+        onClose={() => {
+          setRejectModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onSubmit={handleRejectConfirm}
+        title="Reject Event"
+        itemName={selectedEvent?.title}
+        isSubmitting={actionLoading === selectedEvent?._id}
+      />
     </div>
   );
 }

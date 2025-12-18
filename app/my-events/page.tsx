@@ -53,13 +53,11 @@ export default function MyEventsPage() {
   useEffect(() => {
     const fetchMyEvents = async () => {
       try {
-        // Fetch all events including pending ones for the current user
         const allEvents = await apiClient.get<MyEvent[]>("/api/events");
         const pendingEvents = await apiClient
           .get<MyEvent[]>("/api/events/pending")
           .catch(() => []);
 
-        // Combine and filter by organizer name
         const combined = [...allEvents, ...pendingEvents];
         const uniqueEvents = combined.filter(
           (event, index, self) =>
@@ -151,12 +149,12 @@ export default function MyEventsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {events.map((event) => {
+            {events.map((event, index) => {
               const categoryStyles = getCategoryStyles(event.category);
 
               return (
                 <div
-                  key={event._id}
+                  key={event._id || `event-${index}`}
                   className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div

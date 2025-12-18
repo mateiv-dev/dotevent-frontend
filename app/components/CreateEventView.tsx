@@ -10,6 +10,9 @@ import {
   Users,
   User,
   Loader2,
+  Upload,
+  X,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
@@ -17,13 +20,15 @@ import { Select } from "./ui/Select";
 import { TextArea } from "./ui/TextArea";
 
 interface CreateEventViewProps {
-  onCreate: (event: any) => Promise<boolean>;
+  onCreate: (event: any, files: File[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
 function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -35,13 +40,50 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     organizer: "",
   });
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const imageFiles = selectedFiles.filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (files.length + imageFiles.length > 10) {
+      setError("You can upload a maximum of 10 images");
+      return;
+    }
+
+    const oversizedFiles = imageFiles.filter(
+      (file) => file.size > 5 * 1024 * 1024
+    );
+    if (oversizedFiles.length > 0) {
+      setError("Some files are too large. Maximum size is 5MB per file.");
+      return;
+    }
+
+    setError("");
+    const newFiles = [...files, ...imageFiles];
+    setFiles(newFiles);
+
+    imageFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index));
+    setFilePreviews(filePreviews.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);
 
     try {
-      const success = await onCreate(formData);
+      const success = await onCreate(formData, files);
       if (!success) {
         setError("Failed to create event. Please try again.");
       }
@@ -173,6 +215,75 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               }
               disabled={isSubmitting}
             />
+
+            {/* File upload section */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Event Images (Optional)
+              </label>
+              <div className="space-y-3">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    disabled={isSubmitting || files.length >= 10}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className={`flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${files.length >= 10
+                      ? "border-slate-200 bg-slate-50 cursor-not-allowed"
+                      : "border-slate-300 hover:border-blue-500 hover:bg-blue-50"
+                      }`}
+                  >
+                    <Upload size={20} className="text-slate-400" />
+                    <span className="text-sm text-slate-600">
+                      {files.length >= 10
+                        ? "Maximum 10 images reached"
+                        : "Click to upload images (max 10, 5MB each)"}
+                    </span>
+                  </label>
+                </div>
+
+                {/* File previews */}
+                {filePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {filePreviews.map((preview, index) => (
+                      <div
+                        key={index}
+                        className="relative group rounded-lg overflow-hidden border border-slate-200"
+                      >
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
+                          <p className="text-xs text-white truncate">
+                            {files[index]?.name}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-xs text-slate-500">
+                  <ImageIcon size={12} className="inline mr-1" />
+                  Supported formats: JPG, PNG, GIF, WebP
+                </p>
+              </div>
+            </div>
           </div>
 
           {error && (
