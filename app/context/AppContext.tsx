@@ -13,7 +13,6 @@ import Event from "../types/event";
 import Notification from "../types/notification";
 import { User } from "../types/user";
 import { UserSettings, DEFAULT_SETTINGS } from "../types/settings";
-import { INITIAL_NOTIFICATIONS } from "../data/mockData";
 import { useAuth } from "./AuthContext";
 import { apiClient } from "../../lib/apiClient";
 import { uploadClient } from "../../lib/uploadClient";
@@ -27,11 +26,12 @@ interface AppContextType {
   refreshEvents: () => Promise<void>;
   registerForEvent: (eventId: string) => Promise<string>;
   unregisterFromEvent: (eventId: string) => Promise<void>;
+  toggleRegistration: (eventId: string) => Promise<void>;
   createEvent: (newEvent: any, files?: File[]) => Promise<boolean>;
 
   notifications: Notification[];
-  markAsRead: (id: number) => void;
-  deleteNotification: (id: number) => void;
+  markAsRead: (id: string | number) => void;
+  deleteNotification: (id: string | number) => void;
   markAllAsRead: () => void;
 
   searchTerm: string;
@@ -329,6 +329,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await fetchEvents();
   }, [fetchEvents]);
 
+  const toggleRegistration = useCallback(async (eventId: string): Promise<void> => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+
+    try {
+      if (event.isRegistered) {
+        await unregisterFromEvent(eventId);
+      } else {
+        await registerForEvent(eventId);
+      }
+    } catch (error) {
+      console.error("Failed to toggle registration:", error);
+      throw error;
+    }
+  }, [events, registerForEvent, unregisterFromEvent]);
+
   const markAsRead = useCallback(async (id: string | number) => {
     try {
       const notificationId = typeof id === 'string' ? id : notifications.find(n => n.id === id)?._id;
@@ -381,6 +397,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshEvents,
       registerForEvent,
       unregisterFromEvent,
+      toggleRegistration,
       createEvent,
       notifications,
       markAsRead,
@@ -401,6 +418,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshEvents,
       registerForEvent,
       unregisterFromEvent,
+      toggleRegistration,
       createEvent,
       notifications,
       markAsRead,

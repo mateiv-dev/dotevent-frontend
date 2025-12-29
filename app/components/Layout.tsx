@@ -237,7 +237,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    markAsRead(notif.id);
+                                    markAsRead(notif._id);
                                   }}
                                   className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 >
@@ -247,7 +247,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteNotification(notif.id);
+                                  deleteNotification(notif._id);
                                 }}
                                 className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               >
