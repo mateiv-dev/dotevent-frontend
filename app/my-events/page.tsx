@@ -7,6 +7,7 @@ import Layout from "../components/Layout";
 import EditEventModal from "../components/EditEventModal";
 import ParticipantsModal from "../components/ParticipantsModal";
 import CheckInModal from "../components/CheckInModal";
+import EventStatisticsModal from "../components/EventStatisticsModal";
 import { apiClient } from "../../lib/apiClient";
 import {
   Calendar,
@@ -22,6 +23,7 @@ import {
   Plus,
   UserCheck,
   ScanLine,
+  BarChart3,
 } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { getImageUrl } from "../utils/imageUtils";
@@ -57,6 +59,7 @@ export default function MyEventsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [participantsEvent, setParticipantsEvent] = useState<MyEvent | null>(null);
   const [checkInEvent, setCheckInEvent] = useState<MyEvent | null>(null);
+  const [statisticsEvent, setStatisticsEvent] = useState<MyEvent | null>(null);
 
   useEffect(() => {
     if (
@@ -287,6 +290,13 @@ export default function MyEventsPage() {
                         {event.status === "approved" && (
                           <>
                             <button
+                              onClick={() => setStatisticsEvent(event)}
+                              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                              title="View statistics"
+                            >
+                              <BarChart3 size={18} />
+                            </button>
+                            <button
                               onClick={() => setCheckInEvent(event)}
                               className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                               title="Check-in participants"
@@ -387,6 +397,16 @@ export default function MyEventsPage() {
           onClose={() => setCheckInEvent(null)}
           eventId={checkInEvent.id}
           eventTitle={checkInEvent.title}
+        />
+      )}
+
+      {/* Statistics Modal */}
+      {statisticsEvent && (
+        <EventStatisticsModal
+          isOpen={!!statisticsEvent}
+          onClose={() => setStatisticsEvent(null)}
+          eventId={statisticsEvent.id}
+          eventTitle={statisticsEvent.title}
         />
       )}
     </Layout>

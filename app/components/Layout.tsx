@@ -16,6 +16,7 @@ import {
   Shield,
   FileText,
   ClipboardList,
+  Building2,
 } from "lucide-react";
 
 import SettingsModal from "./SettingsModal";
@@ -134,6 +135,15 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
               My Events
             </Link>
           )}
+          {currentUser.role && ["student_rep", "organizer"].includes(currentUser.role) && (
+            <Link
+              href="/organization-events"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/organization-events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              <Building2 size={20} />
+              Organization Events
+            </Link>
+          )}
           {currentUser.role && currentUser.role !== "admin" && (
             <Link
               href="/my-requests"
@@ -147,7 +157,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         </nav>
 
         <div className="p-6 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500">© 2025 Softwave Team</p>
+          <p className="text-xs text-slate-500">© 2026 Softwave Team</p>
         </div>
       </aside>
 

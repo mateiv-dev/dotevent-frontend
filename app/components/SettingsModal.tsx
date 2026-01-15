@@ -14,6 +14,7 @@ import {
   Building,
   Loader2,
   ArrowUpCircle,
+  Star,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
@@ -23,13 +24,14 @@ import { Select } from "./ui/Select";
 import { Checkbox } from "./ui/Checkbox";
 import RoleRequestModal from "./RoleRequestModal";
 import { formatRole } from "../utils/formatters";
+import { apiClient, APIError, UserReview } from "../../lib/apiClient";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type Tab = "profile" | "notifications" | "appearance" | "account";
+type Tab = "profile" | "notifications" | "appearance" | "reviews" | "account";
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { currentUser, updateUser, settings, updateSettings } = useApp();
@@ -44,6 +46,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [university, setUniversity] = useState("");
   const [represents, setRepresents] = useState("");
   const [organizationName, setOrganizationName] = useState("");
+  const [reviews, setReviews] = useState<UserReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && currentUser) {
@@ -61,6 +65,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     }
   }, [isOpen, currentUser]);
+
+  const fetchReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const data = await apiClient.getUserReviews();
+      setReviews(data);
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "reviews" && reviews.length === 0 && !reviewsLoading) {
+      fetchReviews();
+    }
+  }, [activeTab]);
 
   if (!isOpen) return null;
   if (!currentUser) return null;
@@ -105,8 +127,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     { id: "profile", label: "Profile", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
+    { id: "reviews", label: "My Reviews", icon: Star },
     { id: "account", label: "Account", icon: Shield },
-  ].filter(tab => currentUser?.role !== "admin" || tab.id !== "notifications");
+  ].filter(tab => {
+    if (tab.id === "notifications" && currentUser?.role === "admin") return false;
+    if (tab.id === "reviews" && (currentUser?.role === "admin" || currentUser?.role === "organizer")) return false;
+    return true;
+  });
 
   return (
     <div
@@ -402,6 +429,69 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <option value="ro">Română</option>
                   </Select>
                 </div>
+              </div>
+            )}
+
+            {activeTab === "reviews" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
+                    My Reviews
+                  </h3>
+                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
+                    View feedback you&apos;ve given for events you attended.
+                  </p>
+                </div>
+
+                {reviewsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Star className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                    <p className="text-slate-500">No reviews yet</p>
+                    <p className="text-sm text-slate-400 mt-1">
+                      Your reviews will appear here after you rate events
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-slate-900 line-clamp-1">
+                            {review.event.title}
+                          </h4>
+                          <div className="flex items-center gap-1 ml-2 shrink-0">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                size={14}
+                                className={
+                                  star <= review.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-slate-300"
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-slate-600 mb-2">
+                            {review.comment}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-400">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

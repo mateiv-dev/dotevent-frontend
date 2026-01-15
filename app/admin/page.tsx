@@ -6,11 +6,12 @@ import { useApp } from "../context/AppContext";
 import Layout from "../components/Layout";
 import RoleRequestsTab from "../components/admin/RoleRequestsTab";
 import PendingEventsTab from "../components/admin/PendingEventsTab";
+import RejectedEventsTab from "../components/admin/RejectedEventsTab";
 import UsersTab from "../components/admin/UsersTab";
 import StatisticsTab from "../components/admin/StatisticsTab";
-import { Users, Calendar, Shield, UserCog, BarChart3 } from "lucide-react";
+import { Users, Calendar, Shield, UserCog, BarChart3, XCircle } from "lucide-react";
 
-type AdminTab = "statistics" | "role-requests" | "pending-events" | "users";
+type AdminTab = "statistics" | "role-requests" | "pending-events" | "rejected-events" | "users";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -44,6 +45,11 @@ export default function AdminPage() {
       id: "pending-events" as AdminTab,
       label: "Pending Events",
       icon: Calendar,
+    },
+    {
+      id: "rejected-events" as AdminTab,
+      label: "Rejected Events",
+      icon: XCircle,
     },
     {
       id: "users" as AdminTab,
@@ -93,6 +99,7 @@ export default function AdminPage() {
             {activeTab === "statistics" && <StatisticsTab />}
             {activeTab === "role-requests" && <RoleRequestsTab />}
             {activeTab === "pending-events" && <PendingEventsTab />}
+            {activeTab === "rejected-events" && <RejectedEventsTab />}
             {activeTab === "users" && <UsersTab />}
           </div>
         </div>

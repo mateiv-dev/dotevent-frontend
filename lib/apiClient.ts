@@ -181,6 +181,29 @@ class APIClient {
   async getEventStatistics(eventId: string): Promise<EventStatistics> {
     return this.get<EventStatistics>(`/api/events/${eventId}/statistics`);
   }
+
+  async getRejectedEvents(
+    page?: number,
+    limit?: number
+  ): Promise<{ events: RejectedEvent[]; total: number }> {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return this.get(`/api/events/rejected${query}`);
+  }
+
+  async getOrganizationEvents(): Promise<OrganizationEvent[]> {
+    return this.get<OrganizationEvent[]>("/api/users/me/events/organization");
+  }
+
+  async getUserReviews(): Promise<UserReview[]> {
+    return this.get<UserReview[]>("/api/users/me/reviews");
+  }
+
+  async getAvailableOrganizers(): Promise<AvailableOrganizer[]> {
+    return this.get<AvailableOrganizer[]>("/api/users/organizers");
+  }
 }
 
 export interface MonthlyActivity {
@@ -237,9 +260,72 @@ export interface ParticipantsResponse {
 }
 
 export interface EventStatistics {
-  totalRegistrations: number;
-  checkedInCount: number;
+  totalParticipants: number;
+  checkedInParticipants: number;
   attendanceRate: number;
+  feedbackCount: number;
+  averageRating: number;
+}
+
+export interface RejectedEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  capacity: number;
+  attendees: number;
+  organizer: {
+    represents: string | null;
+    organizationName: string | null;
+  };
+  description: string;
+  status: "rejected";
+  rejectionReason?: string;
+  titleImage?: string;
+  createdAt: string;
+  author?: {
+    name: string;
+    email: string;
+  };
+}
+
+export interface OrganizationEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  capacity: number;
+  attendees: number;
+  status: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  titleImage?: string;
+  createdAt: string;
+  author?: {
+    name: string;
+    email: string;
+  };
+}
+
+export interface UserReview {
+  id: string;
+  event: {
+    id: string;
+    title: string;
+  };
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface AvailableOrganizer {
+  id: string;
+  name: string;
+  organizationName?: string;
+  represents?: string;
 }
 
 export const apiClient = new APIClient();

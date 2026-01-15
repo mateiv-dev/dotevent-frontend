@@ -185,8 +185,20 @@ export default function EventDetailsPage({
     }
   };
 
+  const getEventStartTime = () => {
+    const startTime = new Date(event.date);
+    if (event.time) {
+      const [hours, minutes] = event.time.split(':');
+      startTime.setHours(parseInt(hours!), parseInt(minutes!), 0, 0);
+    } else {
+      startTime.setHours(0, 0, 0, 0);
+    }
+    return startTime;
+  };
+
   const eventDate = new Date(event.date);
-  const canReview = currentUser && event.isRegistered && eventDate <= new Date();
+  const eventStartTime = getEventStartTime();
+  const canReview = currentUser && event.isRegistered && eventStartTime <= new Date();
   const userHasReviewed = reviews.some(r => r.user.id === currentUser?.id);
 
   const organizerName = typeof event.organizer === 'string'
