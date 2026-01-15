@@ -1,12 +1,11 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Building, GraduationCap, FileText, Loader2 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { TextArea } from "./ui/TextArea";
 import { Select } from "./ui/Select";
 import { apiClient } from "../../lib/apiClient";
+import { useApp } from "../context/AppContext";
 
 interface RoleRequestModalProps {
   isOpen: boolean;
@@ -23,6 +22,7 @@ export default function RoleRequestModal({
   currentRole,
   onSuccess,
 }: RoleRequestModalProps) {
+  const { currentUser } = useApp();
   const [requestedRole, setRequestedRole] =
     useState<RequestedRole>("student_rep");
   const [university, setUniversity] = useState("");
@@ -32,6 +32,16 @@ export default function RoleRequestModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Autofill university for students requesting student_rep role
+  useEffect(() => {
+    if (isOpen && currentUser && currentUser.role === "student" && requestedRole === "student_rep") {
+      const studentUser = currentUser as any;
+      if (studentUser.university) {
+        setUniversity(studentUser.university);
+      }
+    }
+  }, [isOpen, currentUser, requestedRole]);
 
   if (!isOpen) return null;
 
@@ -58,7 +68,7 @@ export default function RoleRequestModal({
         payload.organizationName = organizationName;
       }
 
-      await apiClient.post("/api/users/me/requests", payload);
+      await apiClient.post("/api/role-requests", payload);
       setSuccess(true);
       setTimeout(() => {
         onClose();
@@ -143,7 +153,7 @@ export default function RoleRequestModal({
                 disabled={isSubmitting}
               />
               <Input
-                label="Faculty / Department"
+                label="Represents (Faculty/Dorm/Organization)"
                 required
                 placeholder="e.g., Faculty of Automatic Control and Computers"
                 leftIcon={<Building size={16} />}

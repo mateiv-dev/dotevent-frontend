@@ -9,19 +9,47 @@ import { Card } from "./ui/Card";
 function DashboardView({
   currentUser,
   events,
+  createdEvents = [],
   registeredCount,
   toEvents,
+  toCreateEvent,
   onEventClick,
 }: {
   currentUser: User;
   events: Event[];
+  createdEvents?: any[];
   registeredCount: number;
   toEvents: () => void;
+  toCreateEvent: () => void;
   onEventClick: (id: string) => void;
 }) {
   const unregisteredEvents = events.filter((e) => !e.isRegistered);
   const nextUnregisteredEvent =
     unregisteredEvents.length > 0 ? unregisteredEvents[0] : null;
+
+  const isStudent = ["simple_user", "student", "student_rep"].includes(currentUser.role);
+  const isOrganizer = ["organizer", "admin"].includes(currentUser.role);
+
+  // Dynamic Content Logic
+  const myEvents = isOrganizer
+    ? createdEvents
+    : events.filter(e => e.isRegistered);
+
+  const nextUpEvents = myEvents.filter(e => new Date(e.date) >= new Date()).slice(0, 3);
+
+  const welcomeMessage = isOrganizer
+    ? "Manage your events and track attendance."
+    : unregisteredEvents.length > 0
+      ? `There ${unregisteredEvents.length === 1 ? "is" : "are"} ${unregisteredEvents.length} new ${unregisteredEvents.length === 1 ? "event" : "events"} available for you to join.`
+      : "You're all caught up! No new events at the moment.";
+
+  const thirdStatLabel = isOrganizer ? "Events Created" : "Events Joined";
+  const thirdStatValue = isOrganizer
+    ? myEvents.length.toString()
+    : registeredCount.toString();
+
+  const nextUpTitle = isOrganizer ? "Your Upcoming Events" : "Next Up For You";
+  const emptyStateMessage = isOrganizer ? "You haven't created any upcoming events." : "No upcoming registrations.";
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -31,25 +59,16 @@ function DashboardView({
             Welcome back, {currentUser.name}!
           </h2>
           <p className="text-blue-100 mb-8 max-w-lg text-base md:text-lg leading-relaxed">
-            {unregisteredEvents.length > 0 ? (
+            {welcomeMessage}
+            {isStudent && nextUnregisteredEvent && (
               <>
-                There {unregisteredEvents.length === 1 ? "is" : "are"}{" "}
-                {unregisteredEvents.length} new{" "}
-                {unregisteredEvents.length === 1 ? "event" : "events"} available
-                for you to join.
-                {nextUnregisteredEvent && (
-                  <>
-                    <br />
-                    {`Don't miss the ${nextUnregisteredEvent.title}!`}
-                  </>
-                )}
+                <br />
+                {`Don't miss the ${nextUnregisteredEvent.title}!`}
               </>
-            ) : (
-              <> {`You're all caught up! No new events at the moment.`} </>
             )}
           </p>
-          <Button onClick={toEvents} variant="secondary">
-            Find Events
+          <Button onClick={isOrganizer ? toCreateEvent : toEvents} variant="secondary">
+            {isOrganizer ? "Manage Events" : "Find Events"}
           </Button>
         </div>
         <div className="absolute right-0 top-0 w-96 h-96 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl"></div>
@@ -59,18 +78,20 @@ function DashboardView({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           icon={<Calendar className="text-blue-600" size={24} />}
-          label="Upcoming Events"
+          label="Total Active Events"
           value={events.length.toString()}
         />
-        <StatCard
-          icon={<CheckCircle2 className="text-green-600" size={24} />}
-          label="Registered"
-          value={registeredCount.toString()}
-        />
+        {isStudent && (
+          <StatCard
+            icon={<CheckCircle2 className="text-green-600" size={24} />}
+            label="Registrations"
+            value={registeredCount.toString()}
+          />
+        )}
         <StatCard
           icon={<Users className="text-purple-600" size={24} />}
-          label="Total Students"
-          value="2.4k"
+          label={thirdStatLabel}
+          value={thirdStatValue}
         />
       </div>
 
@@ -80,67 +101,64 @@ function DashboardView({
             <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
               <Clock size={20} />
             </div>
-            Next Up For You
+            {nextUpTitle}
           </h3>
-          {events.filter((e: Event) => e.isRegistered).length > 0 ? (
+          {nextUpEvents.length > 0 ? (
             <div className="space-y-4">
-              {events
-                .filter((e: Event) => e.isRegistered)
-                .slice(0, 3)
-                .map((event: Event) => {
-                  const colorMap: Record<string, string> = {
-                    blue: "bg-blue-50 text-blue-600 group-hover:bg-blue-100",
-                    purple:
-                      "bg-purple-50 text-purple-600 group-hover:bg-purple-100",
-                    orange:
-                      "bg-orange-50 text-orange-600 group-hover:bg-orange-100",
-                    indigo:
-                      "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
-                    green:
-                      "bg-green-50 text-green-600 group-hover:bg-green-100",
-                  };
-                  const color = getCategoryStyles(event.category).color;
-                  const colorClasses = colorMap[color] || colorMap.green;
+              {nextUpEvents.map((event: Event) => {
+                const colorMap: Record<string, string> = {
+                  blue: "bg-blue-50 text-blue-600 group-hover:bg-blue-100",
+                  purple:
+                    "bg-purple-50 text-purple-600 group-hover:bg-purple-100",
+                  orange:
+                    "bg-orange-50 text-orange-600 group-hover:bg-orange-100",
+                  indigo:
+                    "bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100",
+                  green:
+                    "bg-green-50 text-green-600 group-hover:bg-green-100",
+                };
+                const color = getCategoryStyles(event.category).color;
+                const colorClasses = colorMap[color] || colorMap.green;
 
-                  return (
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => onEventClick(event.id)}
+                    className="flex items-center gap-5 p-4 border border-slate-100 hover:border-blue-200 cursor-pointer hover:bg-blue-50/30 rounded-2xl transition-all group"
+                  >
                     <div
-                      key={event.id}
-                      onClick={() => onEventClick(event.id)}
-                      className="flex items-center gap-5 p-4 border border-slate-100 hover:border-blue-200 cursor-pointer hover:bg-blue-50/30 rounded-2xl transition-all group"
+                      className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center text-sm font-bold shrink-0 transition-colors ${colorClasses}`}
                     >
-                      <div
-                        className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center text-sm font-bold shrink-0 transition-colors ${colorClasses}`}
-                      >
-                        <span>{new Date(event.date).getDate()}</span>
-                        <span className="uppercase text-[10px] font-extrabold opacity-70">
-                          {new Date(event.date).toLocaleString("default", {
-                            month: "short",
-                          })}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900 line-clamp-1 text-lg group-hover:text-blue-700 transition-colors">
-                          {event.title}
-                        </h4>
-                        <p className="text-sm text-slate-500 font-medium mt-0.5">
-                          {event.time} • {event.location}
-                        </p>
-                      </div>
+                      <span>{new Date(event.date).getDate()}</span>
+                      <span className="uppercase text-[10px] font-extrabold opacity-70">
+                        {new Date(event.date).toLocaleString("default", {
+                          month: "short",
+                        })}
+                      </span>
                     </div>
-                  );
-                })}
+                    <div>
+                      <h4 className="font-bold text-slate-900 line-clamp-1 text-lg group-hover:text-blue-700 transition-colors">
+                        {event.title}
+                      </h4>
+                      <p className="text-sm text-slate-500 font-medium mt-0.5">
+                        {event.time} • {event.location}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
               <p className="text-slate-400 font-medium">
-                No upcoming registrations.
+                {emptyStateMessage}
               </p>
               <Button
-                onClick={toEvents}
+                onClick={isOrganizer ? toCreateEvent : toEvents}
                 variant="ghost"
                 className="text-blue-600 hover:bg-transparent hover:underline p-0 h-auto mt-2"
               >
-                Browse events
+                {isOrganizer ? "Create Event" : "Browse events"}
               </Button>
             </div>
           )}

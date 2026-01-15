@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Plus,
+  X,
   Calendar,
   Clock,
   MapPin,
@@ -11,8 +11,6 @@ import {
   User,
   Loader2,
   Upload,
-  X,
-  Image as ImageIcon,
   Building,
   GraduationCap,
 } from "lucide-react";
@@ -21,16 +19,38 @@ import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { TextArea } from "./ui/TextArea";
 
-interface CreateEventViewProps {
-  onCreate: (event: any, files: File[]) => Promise<boolean>;
-  onCancel: () => void;
+interface EditEventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  event: {
+    id: string;
+    title: string;
+    date: string;
+    time: string;
+    location: string;
+    category: string;
+    capacity: number;
+    organizer: string;
+    description: string;
+    faculty?: string;
+    department?: string;
+    attachments?: Array<{ url: string; name: string }>;
+  };
+  onSave: (eventId: string, eventData: any, files?: File[], filesToDelete?: string[]) => Promise<boolean>;
 }
 
-function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
+export default function EditEventModal({
+  isOpen,
+  onClose,
+  event,
+  onSave,
+}: EditEventModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [existingFiles, setExistingFiles] = useState<Array<{ url: string; name: string }>>([]);
+  const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -39,10 +59,36 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     category: "Academic",
     description: "",
     capacity: 100,
-    contact: "",
+    organizer: "",
     faculty: "",
     department: "",
   });
+
+  useEffect(() => {
+    if (event && isOpen) {
+      const eventDate = new Date(event.date);
+      const formattedDate = eventDate.toISOString().split("T")[0];
+
+      setFormData({
+        title: event.title,
+        date: formattedDate,
+        time: event.time,
+        location: event.location,
+        category: event.category,
+        description: event.description,
+        capacity: event.capacity,
+        organizer: event.organizer,
+        faculty: event.faculty || "",
+        department: event.department || "",
+      });
+      setExistingFiles(event.attachments || []);
+      setFilesToDelete([]);
+      setFiles([]);
+      setFilePreviews([]);
+    }
+  }, [event, isOpen]);
+
+  if (!isOpen) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -50,8 +96,9 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
       file.type.startsWith("image/")
     );
 
-    if (files.length + imageFiles.length > 10) {
-      setError("You can upload a maximum of 10 images");
+    const totalFiles = existingFiles.length - filesToDelete.length + files.length + imageFiles.length;
+    if (totalFiles > 10) {
+      setError("You can have a maximum of 10 images");
       return;
     }
 
@@ -76,9 +123,17 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     });
   };
 
-  const removeFile = (index: number) => {
+  const removeNewFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
     setFilePreviews(filePreviews.filter((_, i) => i !== index));
+  };
+
+  const markExistingFileForDeletion = (fileUrl: string) => {
+    setFilesToDelete((prev) => [...prev, fileUrl]);
+  };
+
+  const restoreExistingFile = (fileUrl: string) => {
+    setFilesToDelete((prev) => prev.filter((url) => url !== fileUrl));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,34 +142,35 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     setIsSubmitting(true);
 
     try {
-      const success = await onCreate(formData, files);
-      if (!success) {
-        setError("Failed to create event. Please try again.");
+      const success = await onSave(event.id, formData, files, filesToDelete);
+      if (success) {
+        onClose();
+      } else {
+        setError("Failed to update event. Please try again.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create event. Please try again.");
+      setError(err.message || "Failed to update event. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-        <div className="bg-slate-50/50 p-8 border-b border-slate-100">
-          <h2 className="text-2xl font-bold text-slate-900">
-            Create New Event
-          </h2>
-          <p className="text-slate-500 mt-1">
-            Fill in the details to publish an event to the student portal.
-          </p>
-          <p className="text-amber-600 text-sm mt-2">
-            Note: Events require admin approval before they become visible.
-          </p>
+    <div className="fixed top-16 left-0 right-0 bottom-14 lg:left-64 lg:bottom-0 z-[100] flex items-center justify-center bg-black/50 p-4 transition-opacity animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0 bg-white">
+          <h2 className="text-xl font-bold text-slate-900">Edit Event</h2>
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <X size={20} className="text-slate-500" />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <Input
               label="Event Title"
               required
@@ -123,11 +179,10 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              className="text-lg placeholder:font-normal"
               disabled={isSubmitting}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Date"
                 required
@@ -137,7 +192,6 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
                 }
-                onClick={(e) => e.currentTarget.showPicker?.()}
                 disabled={isSubmitting}
               />
               <Input
@@ -149,12 +203,11 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, time: e.target.value })
                 }
-                onClick={(e) => e.currentTarget.showPicker?.()}
                 disabled={isSubmitting}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Location"
                 required
@@ -182,7 +235,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Capacity"
                 required
@@ -199,20 +252,20 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 disabled={isSubmitting}
               />
               <Input
-                label="Contact Info"
+                label="Organizer"
                 required
-                placeholder="Email or Phone Number"
+                placeholder="Organization or Person Name"
                 leftIcon={<User size={16} />}
-                value={formData.contact}
+                value={formData.organizer}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
+                  setFormData({ ...formData, organizer: e.target.value })
                 }
                 disabled={isSubmitting}
               />
             </div>
 
-            {/* Faculty & Department - Optional fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Faculty & Department */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Faculty (Optional)"
                 placeholder="e.g., Faculty of Engineering"
@@ -246,10 +299,60 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               disabled={isSubmitting}
             />
 
-            {/* File upload section */}
+            {/* Existing Files */}
+            {existingFiles.length > 0 && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Current Images
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {existingFiles.map((file, index) => {
+                    const isMarkedForDeletion = filesToDelete.includes(file.url);
+                    return (
+                      <div
+                        key={index}
+                        className={`relative group rounded-lg overflow-hidden border ${isMarkedForDeletion
+                          ? "border-red-300 opacity-50"
+                          : "border-slate-200"
+                          }`}
+                      >
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="w-full h-24 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            isMarkedForDeletion
+                              ? restoreExistingFile(file.url)
+                              : markExistingFileForDeletion(file.url)
+                          }
+                          className={`absolute top-1 right-1 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${isMarkedForDeletion
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                            }`}
+                        >
+                          <X size={14} />
+                        </button>
+                        {isMarkedForDeletion && (
+                          <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                            <span className="text-xs text-red-700 font-medium bg-white px-2 py-1 rounded">
+                              Will be deleted
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* New File Upload */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Event Images (Optional)
+                Add New Images
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -258,27 +361,22 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                     accept="image/*"
                     multiple
                     onChange={handleFileChange}
-                    disabled={isSubmitting || files.length >= 10}
+                    disabled={isSubmitting}
                     className="hidden"
-                    id="file-upload"
+                    id="edit-file-upload"
                   />
                   <label
-                    htmlFor="file-upload"
-                    className={`flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${files.length >= 10
-                      ? "border-slate-200 bg-slate-50 cursor-not-allowed"
-                      : "border-slate-300 hover:border-blue-500 hover:bg-blue-50"
-                      }`}
+                    htmlFor="edit-file-upload"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer border-slate-300 hover:border-blue-500 hover:bg-blue-50"
                   >
                     <Upload size={20} className="text-slate-400" />
                     <span className="text-sm text-slate-600">
-                      {files.length >= 10
-                        ? "Maximum 10 images reached"
-                        : "Click to upload images (max 10, 5MB each)"}
+                      Click to upload images (max 10 total, 5MB each)
                     </span>
                   </label>
                 </div>
 
-                {/* File previews */}
+                {/* New File Previews */}
                 {filePreviews.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {filePreviews.map((preview, index) => (
@@ -288,45 +386,38 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                       >
                         <img
                           src={preview}
-                          alt={`Preview ${index + 1}`}
+                          alt={`New ${index + 1}`}
                           className="w-full h-24 object-cover"
                         />
                         <button
                           type="button"
-                          onClick={() => removeFile(index)}
+                          onClick={() => removeNewFile(index)}
                           className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X size={14} />
                         </button>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-1">
-                          <p className="text-xs text-white truncate">
-                            {files[index]?.name}
-                          </p>
+                          <p className="text-xs text-white truncate">New</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-
-                <p className="text-xs text-slate-500">
-                  <ImageIcon size={12} className="inline mr-1" />
-                  Supported formats: JPG, PNG, GIF, WebP
-                </p>
               </div>
             </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-100 shrink-0 bg-white">
             <Button
               type="button"
               variant="ghost"
-              onClick={onCancel}
+              onClick={onClose}
               disabled={isSubmitting}
             >
               Cancel
@@ -337,13 +428,11 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               leftIcon={
                 isSubmitting ? (
                   <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <Plus size={20} />
-                )
+                ) : null
               }
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Publish Event"}
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
@@ -351,5 +440,3 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     </div>
   );
 }
-
-export default CreateEventView;

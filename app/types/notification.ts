@@ -1,10 +1,19 @@
-export default interface Notification {
-  _id: string;
-  id?: number;
+export interface RelatedEvent {
+  id: string;
   title: string;
-  message: string;
-  time?: string;
+}
+
+export interface RelatedRequest {
+  id: string;
+  requestedRole: string;
+}
+
+export default interface Notification {
+  id: string;
+  title: string;
+  type: string;
   isRead: boolean;
-  type?: string;
-  createdAt?: string;
+  relatedEvent: RelatedEvent | null;
+  relatedRequest: RelatedRequest | null;
+  createdAt: string;
 }

@@ -60,6 +60,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [isOpen, currentUser]);
 
+  if (!isOpen) return null;
   if (!currentUser) return null;
 
   const handleSave = async () => {
@@ -89,14 +90,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   };
 
-  if (!isOpen) return null;
+
 
   const tabs = [
     { id: "profile", label: "Profile", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account", icon: Shield },
-  ];
+  ].filter(tab => currentUser?.role !== "admin" || tab.id !== "notifications");
 
   return (
     <div
@@ -125,11 +126,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
@@ -142,11 +142,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 bg-slate-100"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-600 bg-slate-100"
+                  }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
@@ -188,29 +187,30 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
                     Your current role:{" "}
                     <span className="font-medium capitalize">
-                      {currentUser.role.replace("_", " ")}
+                      {currentUser.role?.replace("_", " ") || "User"}
                     </span>
                   </p>
 
-                  {currentUser.role !== "organizer" &&
+                  {currentUser.role && currentUser.role !== "organizer" &&
                     currentUser.role !== "admin" && (
                       <Input
                         label={
                           currentUser.role === "student"
                             ? "University / Department"
                             : currentUser.role === "student_rep"
-                              ? "Department / Faculty"
+                              ? "Represents (Faculty/Dorm/Organization)"
                               : "Organization"
                         }
                         leftIcon={<Building size={16} />}
                         value={roleField}
                         onChange={(e) => setRoleField(e.target.value)}
                         disabled={currentUser.role === "simple_user"}
-                        className="disabled:bg-slate-50 disabled:text-slate-500 mb-4"
+                        className="disabled:bg-slate-50 disabled:text-slate-500"
+                        containerClassName="mb-4"
                       />
                     )}
 
-                  {currentUser.role !== "admin" &&
+                  {currentUser.role && currentUser.role !== "admin" &&
                     currentUser.role !== "organizer" && (
                       <Button
                         type="button"
@@ -227,7 +227,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <RoleRequestModal
                   isOpen={isRoleRequestOpen}
                   onClose={() => setIsRoleRequestOpen(false)}
-                  currentRole={currentUser.role}
+                  currentRole={currentUser.role || "simple_user"}
                 />
               </div>
             )}
@@ -259,26 +259,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       </span>
                       <Checkbox
                         checked={settings.notifications.reminder24h}
-                        readOnly
-                        containerClassName="pointer-events-none"
-                      />
-                    </div>
-                    <div
-                      className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                      onClick={() =>
-                        updateSettings({
-                          notifications: {
-                            ...settings.notifications,
-                            reminder1h: !settings.notifications.reminder1h,
-                          },
-                        })
-                      }
-                    >
-                      <span className="text-sm sm:text-sm font-medium text-slate-700">
-                        1 hour before
-                      </span>
-                      <Checkbox
-                        checked={settings.notifications.reminder1h}
                         readOnly
                         containerClassName="pointer-events-none"
                       />
@@ -328,19 +308,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           },
                         })
                       }
-                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                        settings.appearance.theme === "light"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
+                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === "light"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 hover:border-slate-300"
+                        }`}
                     >
                       <div className="w-full h-20 sm:h-20 bg-white border border-slate-200 rounded-lg shadow-sm"></div>
                       <span
-                        className={`text-sm sm:text-sm font-medium ${
-                          settings.appearance.theme === "light"
-                            ? "text-blue-700"
-                            : "text-slate-600"
-                        }`}
+                        className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === "light"
+                          ? "text-blue-700"
+                          : "text-slate-600"
+                          }`}
                       >
                         Light
                       </span>
@@ -351,19 +329,17 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                           appearance: { ...settings.appearance, theme: "dark" },
                         })
                       }
-                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                        settings.appearance.theme === "dark"
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
+                      className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === "dark"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 hover:border-slate-300"
+                        }`}
                     >
                       <div className="w-full h-20 sm:h-20 bg-slate-900 border border-slate-700 rounded-lg shadow-sm"></div>
                       <span
-                        className={`text-sm sm:text-sm font-medium ${
-                          settings.appearance.theme === "dark"
-                            ? "text-blue-700"
-                            : "text-slate-600"
-                        }`}
+                        className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === "dark"
+                          ? "text-blue-700"
+                          : "text-slate-600"
+                          }`}
                       >
                         Dark
                       </span>

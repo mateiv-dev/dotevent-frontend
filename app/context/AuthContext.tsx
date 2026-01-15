@@ -20,7 +20,7 @@ import { apiClient } from "../../lib/apiClient";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, profileData: any) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -29,10 +29,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  signIn: async () => {},
-  signUp: async () => {},
-  signOut: async () => {},
-  deleteAccount: async () => {},
+  signIn: async () => { },
+  signUp: async () => { },
+  signOut: async () => { },
+  deleteAccount: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -57,7 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     if (!auth) throw new Error("Firebase is not configured.");
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const idTokenResult = await userCredential.user.getIdTokenResult();
+    return { ...userCredential, role: idTokenResult.claims.role };
   };
 
   const signUp = async (email: string, password: string, profileData: any) => {
@@ -75,7 +77,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!auth || !auth.currentUser) return;
     const user = auth.currentUser;
     await apiClient.delete("/api/users/me");
-    await user.delete();
+
+    try {
+      await user.delete();
+    } catch (error: any) {
+      if (error?.code !== 'auth/user-token-expired') {
+        throw error;
+      }
+    }
+
+    await firebaseSignOut(auth);
   };
 
   return (

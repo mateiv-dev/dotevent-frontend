@@ -16,6 +16,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
+      // We can't easily check the role here synchronously without the full user object from AppContext,
+      // but typically login redirects handle the flow.
+      // For better UX, we might wait, but for now we lean on the handleSubmit rewrite
+      // or checking claims if we had them.
+      // Let's defer to the handleSubmit logic for new logins, 
+      // but for existing sessions, we'll let them hit dashboard and then be redirected by dashboard/page.tsx
       router.push("/dashboard");
     }
   }, [user, loading, router]);
@@ -33,8 +39,12 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
     try {
-      await signIn(email, password);
-      router.push("/dashboard");
+      const result = await signIn(email, password);
+      if (result?.role === 'admin') {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
 import Layout from "../components/Layout";
+import EditEventModal from "../components/EditEventModal";
 import { apiClient } from "../../lib/apiClient";
 import {
   Calendar,
@@ -14,11 +15,14 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Edit,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
 
 interface MyEvent {
-  _id: string;
+  id: string;
   title: string;
   date: string;
   time: string;
@@ -31,51 +35,78 @@ interface MyEvent {
   status: "pending" | "approved" | "rejected";
   rejectionReason?: string;
   createdAt: string;
+  faculty?: string;
+  department?: string;
+  attachments?: Array<{ url: string; name: string }>;
 }
 
 export default function MyEventsPage() {
   const router = useRouter();
-  const { currentUser, isLoading } = useApp();
+  const { currentUser, isLoading, updateEvent, deleteEvent } = useApp();
   const [events, setEvents] = useState<MyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingEvent, setEditingEvent] = useState<MyEvent | null>(null);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     if (
       !isLoading &&
       currentUser &&
-      !["student_rep", "organizer", "admin"].includes(currentUser.role)
+      currentUser.role &&
+      !["student_rep", "organizer"].includes(currentUser.role)
     ) {
       router.push("/dashboard");
     }
   }, [currentUser, isLoading, router]);
 
+  const fetchMyEvents = async () => {
+    try {
+      setLoading(true);
+      const myEvents = await apiClient.get<MyEvent[]>("/api/users/me/events");
+      setEvents(myEvents);
+    } catch (err: any) {
+      setError(err.message || "Failed to load events");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMyEvents = async () => {
-      try {
-        const allEvents = await apiClient.get<MyEvent[]>("/api/events");
-        const pendingEvents = await apiClient
-          .get<MyEvent[]>("/api/events/pending")
-          .catch(() => []);
-
-        const combined = [...allEvents, ...pendingEvents];
-        const uniqueEvents = combined.filter(
-          (event, index, self) =>
-            index === self.findIndex((e) => e._id === event._id),
-        );
-
-        setEvents(uniqueEvents);
-      } catch (err: any) {
-        setError(err.message || "Failed to load events");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (currentUser) {
       fetchMyEvents();
     }
   }, [currentUser]);
+
+  const handleEditEvent = async (
+    eventId: string,
+    eventData: any,
+    files?: File[],
+    filesToDelete?: string[]
+  ): Promise<boolean> => {
+    try {
+      await updateEvent(eventId, eventData, files, filesToDelete);
+      await fetchMyEvents();
+      return true;
+    } catch (error) {
+      console.error("Failed to update event:", error);
+      return false;
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    setDeletingEventId(eventId);
+    try {
+      await deleteEvent(eventId);
+      setEvents(events.filter((e) => e.id !== eventId));
+      setShowDeleteConfirm(null);
+    } catch (error: any) {
+      setError(error.message || "Failed to delete event");
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
 
   if (isLoading || loading) {
     return (
@@ -118,16 +149,28 @@ export default function MyEventsPage() {
   return (
     <Layout pageTitle="My Events">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">My Events</h1>
-          <p className="text-slate-500">
-            View and manage events you've created
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">My Events</h1>
+            <p className="text-slate-500">
+              View and manage events you've created
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/events/create")}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Plus size={18} />
+            Create Event
+          </button>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError("")} className="text-red-500 hover:text-red-700">
+              <XCircle size={18} />
+            </button>
           </div>
         )}
 
@@ -144,6 +187,7 @@ export default function MyEventsPage() {
               onClick={() => router.push("/events/create")}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
+              <Plus size={18} />
               Create Event
             </button>
           </div>
@@ -154,7 +198,7 @@ export default function MyEventsPage() {
 
               return (
                 <div
-                  key={event._id || `event-${index}`}
+                  key={event.id || index}
                   className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div
@@ -173,7 +217,7 @@ export default function MyEventsPage() {
                         <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-3">
                           <span className="flex items-center gap-1">
                             <Calendar size={14} />
-                            {event.date} at {event.time}
+                            {new Date(event.date).toLocaleDateString()} at {event.time}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin size={14} />
@@ -215,20 +259,89 @@ export default function MyEventsPage() {
                           >
                             {event.category}
                           </span>
+                          {event.faculty && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                              {event.faculty}
+                            </span>
+                          )}
                           <span className="text-xs text-slate-400">
                             Created:{" "}
                             {new Date(event.createdAt).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {event.status === "approved" && (
+                          <button
+                            onClick={() => setEditingEvent(event)}
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit event"
+                          >
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowDeleteConfirm(event.id)}
+                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete event"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Delete Confirmation */}
+                  {showDeleteConfirm === event.id && (
+                    <div className="px-5 pb-5 pt-0">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p className="text-sm font-medium text-red-800 mb-3">
+                          Are you sure you want to delete this event? This action cannot be undone.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteEvent(event.id)}
+                            disabled={deletingEventId === event.id}
+                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {deletingEventId === event.id ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" />
+                                Deleting...
+                              </>
+                            ) : (
+                              "Delete"
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setShowDeleteConfirm(null)}
+                            disabled={deletingEventId === event.id}
+                            className="px-3 py-1.5 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Edit Event Modal */}
+      {editingEvent && (
+        <EditEventModal
+          isOpen={!!editingEvent}
+          onClose={() => setEditingEvent(null)}
+          event={editingEvent}
+          onSave={handleEditEvent}
+        />
+      )}
     </Layout>
   );
 }

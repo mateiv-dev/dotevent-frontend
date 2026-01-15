@@ -108,7 +108,8 @@ class APIClient {
 
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
-      return await response.json();
+      const text = await response.text();
+      return text ? JSON.parse(text) : ({} as T);
     }
 
     return {} as T;

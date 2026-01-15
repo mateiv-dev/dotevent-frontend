@@ -14,10 +14,12 @@ import {
   GraduationCap,
   Building,
   FileText,
+  Trash2,
 } from "lucide-react";
 
 interface RoleRequest {
-  _id: string;
+  id?: string;
+  _id?: string;
   requestedRole: string;
   status: "pending" | "approved" | "rejected";
   university?: string;
@@ -35,17 +37,23 @@ export default function MyRequestsPage() {
   const [requests, setRequests] = useState<RoleRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !currentUser) {
-      router.push("/login");
+    if (!isLoading) {
+      if (!currentUser) {
+        router.push("/login");
+      } else if (currentUser.role === "admin") {
+        router.push("/dashboard");
+      }
     }
   }, [currentUser, isLoading, router]);
 
   useEffect(() => {
     const fetchMyRequests = async () => {
       try {
-        const data = await apiClient.get<RoleRequest[]>("/api/users/me/requests");
+        const data = await apiClient.get<RoleRequest[]>("/api/users/me/role-requests");
         setRequests(data);
       } catch (err: any) {
         setError(err.message || "Failed to load requests");
@@ -58,6 +66,19 @@ export default function MyRequestsPage() {
       fetchMyRequests();
     }
   }, [currentUser]);
+
+  const handleDeleteRequest = async (requestId: string) => {
+    setDeletingId(requestId);
+    try {
+      await apiClient.delete(`/api/role-requests/${requestId}`);
+      setRequests(requests.filter((r) => r._id !== requestId));
+      setShowDeleteConfirm(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to delete request");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isLoading || loading) {
     return (
@@ -112,8 +133,11 @@ export default function MyRequestsPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError("")} className="text-red-500 hover:text-red-700">
+              <XCircle size={18} />
+            </button>
           </div>
         )}
 
@@ -129,9 +153,9 @@ export default function MyRequestsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {requests.map((request) => (
+            {requests.map((request, index) => (
               <div
-                key={request._id}
+                key={request._id || request.id || index}
                 className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -169,7 +193,50 @@ export default function MyRequestsPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Delete button for pending requests */}
+                  {request.status === "pending" && (
+                    <button
+                      onClick={() => setShowDeleteConfirm(request._id || request.id || "")}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete request"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
                 </div>
+
+                {/* Delete Confirmation */}
+                {showDeleteConfirm === (request._id || request.id) && (
+                  <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-amber-800 mb-3">
+                      Are you sure you want to delete this request? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDeleteRequest(request._id || request.id || "")}
+                        disabled={deletingId === (request._id || request.id)}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {deletingId === (request._id || request.id) ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          "Delete"
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(null)}
+                        disabled={deletingId === (request._id || request.id)}
+                        className="px-3 py-1.5 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {request.status === "rejected" && request.rejectionReason && (
                   <div className="mt-4 pt-4 border-t border-slate-200">

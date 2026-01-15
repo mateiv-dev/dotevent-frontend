@@ -1,6 +1,5 @@
 export interface NotificationSettings {
   reminder24h: boolean;
-  reminder1h: boolean;
   eventUpdates: boolean;
 }
 
@@ -17,7 +16,6 @@ export interface UserSettings {
 export const DEFAULT_SETTINGS: UserSettings = {
   notifications: {
     reminder24h: true,
-    reminder1h: true,
     eventUpdates: true,
   },
   appearance: {

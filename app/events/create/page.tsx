@@ -13,13 +13,13 @@ export default function CreateEventPage() {
 
   useEffect(() => {
     if (!currentUser) return;
-    if (!["student_rep", "organizer", "admin"].includes(currentUser.role)) {
+    if (currentUser.role && !["student_rep", "organizer", "admin"].includes(currentUser.role)) {
       router.push("/dashboard");
     }
   }, [currentUser, router]);
 
-  const handleCreate = async (newEvent: any): Promise<boolean> => {
-    const success = await createEvent(newEvent);
+  const handleCreate = async (newEvent: any, files: File[]): Promise<boolean> => {
+    const success = await createEvent(newEvent, files);
     if (success) {
       setShowSuccess(true);
     }
@@ -59,9 +59,9 @@ export default function CreateEventPage() {
             </p>
             <button
               className="w-auto py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              onClick={() => router.push("/events")}
+              onClick={() => router.push("/my-events")}
             >
-              Go to Events
+              Go to My Events
             </button>
           </div>
         </div>

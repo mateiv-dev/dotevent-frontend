@@ -6,9 +6,10 @@ import { useApp } from "../context/AppContext";
 import Layout from "../components/Layout";
 import RoleRequestsTab from "../components/admin/RoleRequestsTab";
 import PendingEventsTab from "../components/admin/PendingEventsTab";
-import { Users, Calendar, Shield } from "lucide-react";
+import UsersTab from "../components/admin/UsersTab";
+import { Users, Calendar, Shield, UserCog } from "lucide-react";
 
-type AdminTab = "role-requests" | "pending-events";
+type AdminTab = "role-requests" | "pending-events" | "users";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -16,8 +17,10 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("role-requests");
 
   useEffect(() => {
-    if (!isLoading && currentUser && currentUser.role !== "admin") {
-      router.push("/dashboard");
+    if (!isLoading) {
+      if (!currentUser) {
+        router.push("/login");
+      }
     }
   }, [currentUser, isLoading, router]);
 
@@ -29,7 +32,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!currentUser || currentUser.role !== "admin") {
+  if (!currentUser || !currentUser.role || currentUser.role !== "admin") {
     return null;
   }
 
@@ -39,6 +42,11 @@ export default function AdminPage() {
       id: "pending-events" as AdminTab,
       label: "Pending Events",
       icon: Calendar,
+    },
+    {
+      id: "users" as AdminTab,
+      label: "All Users",
+      icon: UserCog,
     },
   ];
 
@@ -54,7 +62,7 @@ export default function AdminPage() {
               Admin Dashboard
             </h1>
             <p className="text-slate-500 text-sm">
-              Manage role requests and pending events
+              Manage role requests, pending events, and users
             </p>
           </div>
         </div>
@@ -67,11 +75,10 @@ export default function AdminPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${activeTab === tab.id
+                    ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   <Icon size={18} />
                   {tab.label}
@@ -83,6 +90,7 @@ export default function AdminPage() {
           <div className="p-6">
             {activeTab === "role-requests" && <RoleRequestsTab />}
             {activeTab === "pending-events" && <PendingEventsTab />}
+            {activeTab === "users" && <UsersTab />}
           </div>
         </div>
       </div>

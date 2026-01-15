@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 interface RoleRequest {
-  _id: string;
+  id: string;
   user: {
     _id: string;
     name: string;
@@ -44,8 +44,8 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
 
   const fetchRequests = async () => {
     try {
-      const data = await apiClient.get<RoleRequest[]>("/api/requests");
-      setRequests(data);
+      const data = await apiClient.get<RoleRequest[]>("/api/role-requests");
+      setRequests(data.filter(r => r.status === 'pending'));
     } catch (err: any) {
       setError(err.message || "Failed to load requests");
     } finally {
@@ -60,7 +60,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
   const handleApprove = async (id: string) => {
     setActionLoading(id);
     try {
-      await apiClient.post(`/api/requests/${id}/approve`, {});
+      await apiClient.post(`/api/role-requests/${id}/approve`, {});
       await fetchRequests();
       onAction?.();
     } catch (err: any) {
@@ -81,9 +81,9 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
   const handleRejectConfirm = async (rejectionReason: string) => {
     if (!selectedRequest) return;
 
-    setActionLoading(selectedRequest._id);
+    setActionLoading(selectedRequest.id);
     try {
-      await apiClient.post(`/api/requests/${selectedRequest._id}/reject`, {
+      await apiClient.post(`/api/role-requests/${selectedRequest.id}/reject`, {
         rejectionReason,
       });
       await fetchRequests();
@@ -127,9 +127,9 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
 
   return (
     <div className="space-y-4">
-      {requests.map((request) => (
+      {requests.map((request, index) => (
         <div
-          key={request._id}
+          key={request.id || index}
           className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm"
         >
           <div className="flex items-start justify-between gap-4">
@@ -179,10 +179,10 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
               <Button
                 size="sm"
                 variant="primary"
-                onClick={() => handleApprove(request._id)}
-                disabled={actionLoading === request._id}
+                onClick={() => handleApprove(request.id)}
+                disabled={actionLoading === request.id}
                 leftIcon={
-                  actionLoading === request._id ? (
+                  actionLoading === request.id ? (
                     <Loader2 size={14} className="animate-spin" />
                   ) : (
                     <Check size={14} />
@@ -195,7 +195,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
                 size="sm"
                 variant="danger"
                 onClick={() => handleRejectClick(request)}
-                disabled={actionLoading === request._id}
+                disabled={actionLoading === request.id}
                 leftIcon={<X size={14} />}
               >
                 Reject
@@ -214,7 +214,7 @@ export default function RoleRequestsTab({ onAction }: RoleRequestsTabProps) {
         onSubmit={handleRejectConfirm}
         title="Reject Role Request"
         itemName={selectedRequest ? `${selectedRequest.user?.name} - ${selectedRequest.requestedRole.replace("_", " ")}` : undefined}
-        isSubmitting={actionLoading === selectedRequest?._id}
+        isSubmitting={actionLoading === selectedRequest?.id}
       />
     </div>
   );

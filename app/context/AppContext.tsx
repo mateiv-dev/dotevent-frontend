@@ -11,11 +11,22 @@ import {
 } from "react";
 import Event from "../types/event";
 import Notification from "../types/notification";
+import Review from "../types/review";
 import { User } from "../types/user";
 import { UserSettings, DEFAULT_SETTINGS } from "../types/settings";
 import { useAuth } from "./AuthContext";
 import { apiClient } from "../../lib/apiClient";
 import { uploadClient } from "../../lib/uploadClient";
+
+export interface EventFilters {
+  category?: string;
+  faculty?: string;
+  department?: string;
+  location?: string;
+  organizer?: string;
+  startDate?: string;
+  endDate?: string;
+}
 
 interface AppContextType {
   currentUser: User | null;
@@ -28,16 +39,33 @@ interface AppContextType {
   unregisterFromEvent: (eventId: string) => Promise<void>;
   toggleRegistration: (eventId: string) => Promise<void>;
   createEvent: (newEvent: any, files?: File[]) => Promise<boolean>;
+  updateEvent: (eventId: string, eventData: any, files?: File[], filesToDelete?: string[]) => Promise<boolean>;
+  deleteEvent: (eventId: string) => Promise<boolean>;
+
+  favoritedEventIds: Set<string>;
+  toggleFavorite: (eventId: string) => Promise<void>;
+  fetchFavorites: () => Promise<void>;
+
+  fetchEventReviews: (eventId: string) => Promise<Review[]>;
+  addReview: (eventId: string, rating: number, comment?: string) => Promise<void>;
+  deleteReview: (reviewId: string, eventId: string) => Promise<void>;
 
   notifications: Notification[];
+  unreadNotificationCount: number;
   markAsRead: (id: string | number) => void;
   deleteNotification: (id: string | number) => void;
   markAllAsRead: () => void;
+  sendEventUpdateNotification: (eventId: string) => Promise<void>;
 
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
   selectedCategory: string;
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
+
+  filters: EventFilters;
+  setFilters: React.Dispatch<React.SetStateAction<EventFilters>>;
+  showFavoritesOnly: boolean;
+  setShowFavoritesOnly: React.Dispatch<React.SetStateAction<boolean>>;
 
   settings: UserSettings;
   updateSettings: (updates: Partial<UserSettings>) => void;
@@ -49,9 +77,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
+  const [favoritedEventIds, setFavoritedEventIds] = useState<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [filters, setFilters] = useState<EventFilters>({});
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
@@ -64,8 +96,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const registeredEvents = await apiClient.get<any[]>("/api/users/me/events");
-      const eventIds = new Set(registeredEvents.map((event: any) => event._id || event.id));
+      const registeredEvents = await apiClient.get<any[]>("/api/users/me/registrations");
+      const eventIds = new Set(registeredEvents.map((reg: any) => reg.event._id || reg.event.id));
       setRegisteredEventIds(eventIds);
     } catch (error) {
       console.error("Failed to fetch user registrations:", error);
@@ -73,20 +105,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [firebaseUser]);
 
+  const fetchFavorites = useCallback(async () => {
+    if (!firebaseUser) {
+      setFavoritedEventIds(new Set());
+      return;
+    }
+
+    try {
+      const favoritedEvents = await apiClient.get<any[]>("/api/users/me/favorite-events");
+      const eventIds = new Set(favoritedEvents.map((event: any) => event._id || event.id));
+      setFavoritedEventIds(eventIds);
+    } catch (error) {
+      console.error("Failed to fetch user favorites:", error);
+      setFavoritedEventIds(new Set());
+    }
+  }, [firebaseUser]);
+
   const fetchNotifications = useCallback(async () => {
     if (!firebaseUser) {
       setNotifications([]);
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    // Don't fetch if user data is loading or if user is admin
+    if (!currentUser || currentUser.role === 'admin') {
       return;
     }
 
     try {
       const notificationsData = await apiClient.get<any[]>("/api/notifications");
       setNotifications(notificationsData);
+      // Also fetch unread count
+      try {
+        const countData = await apiClient.get<{ count: number }>("/api/notifications/unread-count");
+        setUnreadNotificationCount(countData.count);
+      } catch {
+        // Fallback: calculate from notifications
+        setUnreadNotificationCount(notificationsData.filter((n: any) => !n.isRead).length);
+      }
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
       setNotifications([]);
     }
-  }, [firebaseUser]);
+  }, [firebaseUser, currentUser]);
 
   const fetchEvents = useCallback(async () => {
     setEventsLoading(true);
@@ -108,6 +170,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         status: event.status,
         rejectionReason: event.rejectionReason,
         isRegistered: registeredEventIds.has(event._id || event.id),
+        isFavorited: favoritedEventIds.has(event._id || event.id),
+        faculty: event.faculty,
+        department: event.department,
+        titleImage: event.titleImage,
+        attachments: event.attachments,
+        averageRating: event.averageRating || 0,
+        reviewCount: event.reviewCount || 0,
+        author: event.author,
       }));
       setEvents(mappedEvents);
     } catch (error) {
@@ -116,14 +186,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setEventsLoading(false);
     }
-  }, [registeredEventIds]);
+  }, [registeredEventIds, favoritedEventIds]);
 
   useEffect(() => {
     if (!authLoading) {
-      fetchUserRegistrations();
       fetchNotifications();
     }
-  }, [authLoading, fetchUserRegistrations, fetchNotifications]);
+  }, [authLoading, fetchNotifications]);
+
+  useEffect(() => {
+    if (
+      currentUser &&
+      ["simple_user", "student", "student_rep"].includes(currentUser.role)
+    ) {
+      fetchUserRegistrations();
+      fetchFavorites();
+    }
+  }, [currentUser, fetchUserRegistrations, fetchFavorites]);
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -147,6 +226,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setUserLoading(true);
         try {
           const userData = await apiClient.get<any>("/api/users/me");
+
+          // Ensure role field exists - if not, it means we have stale data
+          if (!userData.role) {
+            console.warn("User data missing role field, clearing cache and refetching");
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("currentUser");
+            }
+            // The role should be in the response, so this is an error
+            throw new Error("User data is incomplete - missing role field");
+          }
+
           const mappedUser: User = {
             ...userData,
             id: userData.firebaseId || userData._id,
@@ -239,8 +329,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const registerForEvent = useCallback(async (eventId: string): Promise<string> => {
+    if (currentUser && !["simple_user", "student", "student_rep"].includes(currentUser.role)) {
+      throw new Error("Only students and regular users can register for events.");
+    }
     try {
-      const ticketCode = await apiClient.post<string>(`/api/events/${eventId}/register`, {});
+      const registration = await apiClient.post<any>(`/api/events/${eventId}/register`, {});
+      const ticketCode = registration.ticketCode;
 
       setRegisteredEventIds((prev) => new Set(prev).add(eventId));
 
@@ -263,7 +357,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Failed to register for event:", error);
       throw error;
     }
-  }, []);
+  }, [currentUser]);
 
   const unregisterFromEvent = useCallback(async (eventId: string): Promise<void> => {
     try {
@@ -297,16 +391,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const createEvent = useCallback(
     async (newEvent: any, files: File[] = []): Promise<boolean> => {
       try {
-        const eventData = {
+        const eventData: any = {
           title: newEvent.title,
           date: newEvent.date,
           time: newEvent.time,
           location: newEvent.location,
           category: newEvent.category,
           capacity: newEvent.capacity,
-          organizer: newEvent.organizer,
+          capacity: newEvent.capacity,
+          contact: newEvent.contact,
           description: newEvent.description,
         };
+
+        if (newEvent.faculty) eventData.faculty = newEvent.faculty;
+        if (newEvent.department) eventData.department = newEvent.department;
 
         if (files.length > 0) {
           await uploadClient.uploadEventWithFiles("/api/events", eventData, files);
@@ -347,33 +445,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const markAsRead = useCallback(async (id: string | number) => {
     try {
-      const notificationId = typeof id === 'string' ? id : notifications.find(n => n.id === id)?._id;
+      const notificationId = typeof id === 'string' ? id : String(id);
       if (!notificationId) return;
 
       await apiClient.put(`/api/notifications/${notificationId}/read`, {});
 
       setNotifications((prevNotifications) =>
-        prevNotifications.map((n) => (n._id === notificationId ? { ...n, isRead: true } : n)),
+        prevNotifications.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
       );
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     }
-  }, [notifications]);
+  }, []);
 
   const deleteNotification = useCallback(async (id: string | number) => {
     try {
-      const notificationId = typeof id === 'string' ? id : notifications.find(n => n.id === id)?._id;
+      const notificationId = typeof id === 'string' ? id : String(id);
       if (!notificationId) return;
 
       await apiClient.delete(`/api/notifications/${notificationId}`);
 
       setNotifications((prevNotifications) =>
-        prevNotifications.filter((n) => n._id !== notificationId),
+        prevNotifications.filter((n) => n.id !== notificationId),
       );
     } catch (error) {
       console.error("Failed to delete notification:", error);
     }
-  }, [notifications]);
+  }, []);
 
   const markAllAsRead = useCallback(async () => {
     try {
@@ -384,6 +482,119 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
+    }
+  }, []);
+
+  const toggleFavorite = useCallback(async (eventId: string): Promise<void> => {
+    if (currentUser && !["simple_user", "student", "student_rep"].includes(currentUser.role)) {
+      return;
+    }
+    const isFavorited = favoritedEventIds.has(eventId);
+
+    try {
+      if (isFavorited) {
+        await apiClient.delete(`/api/events/${eventId}/favorite`);
+        setFavoritedEventIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(eventId);
+          return newSet;
+        });
+      } else {
+        await apiClient.post(`/api/events/${eventId}/favorite`, {});
+        setFavoritedEventIds((prev) => new Set(prev).add(eventId));
+      }
+
+      setEvents((prevEvents) =>
+        prevEvents.map((ev) =>
+          ev.id === eventId ? { ...ev, isFavorited: !isFavorited } : ev
+        )
+      );
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+      throw error;
+    }
+  }, [favoritedEventIds, currentUser]);
+
+  const updateEvent = useCallback(
+    async (eventId: string, eventData: any, files: File[] = [], filesToDelete: string[] = []): Promise<boolean> => {
+      try {
+        const payload = {
+          ...eventData,
+          filesToDelete: filesToDelete.length > 0 ? JSON.stringify(filesToDelete) : undefined,
+        };
+
+        if (files.length > 0) {
+          await uploadClient.updateEventWithFiles(`/api/events/${eventId}`, payload, files);
+        } else {
+          await apiClient.put(`/api/events/${eventId}`, { ...eventData, filesToDelete });
+        }
+
+        // Send notifications to registered participants about the update
+        try {
+          await apiClient.post(`/api/notifications/event-updated/${eventId}`, {});
+        } catch (notifError) {
+          console.warn("Failed to send event update notifications:", notifError);
+        }
+
+        await fetchEvents();
+        return true;
+      } catch (error) {
+        console.error("Failed to update event:", error);
+        throw error;
+      }
+    },
+    [fetchEvents]
+  );
+
+  const deleteEvent = useCallback(async (eventId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/api/events/${eventId}`);
+      setEvents((prevEvents) => prevEvents.filter((ev) => ev.id !== eventId));
+      return true;
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+      throw error;
+    }
+  }, []);
+
+  const fetchEventReviews = useCallback(async (eventId: string): Promise<Review[]> => {
+    try {
+      const reviews = await apiClient.get<Review[]>(`/api/events/${eventId}/reviews`, {
+        requiresAuth: false,
+      });
+      return reviews;
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+      return [];
+    }
+  }, []);
+
+  const addReview = useCallback(async (eventId: string, rating: number, comment?: string): Promise<void> => {
+    try {
+      await apiClient.post(`/api/events/${eventId}/reviews`, { rating, comment });
+      await fetchEvents();
+    } catch (error) {
+      console.error("Failed to add review:", error);
+      throw error;
+    }
+  }, [fetchEvents]);
+
+  const deleteReview = useCallback(async (reviewId: string, eventId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/api/reviews/${reviewId}`);
+      await fetchEvents();
+    } catch (error) {
+      console.error("Failed to delete review:", error);
+      throw error;
+    }
+  }, [fetchEvents]);
+
+  const sendEventUpdateNotification = useCallback(async (eventId: string): Promise<void> => {
+    try {
+      await apiClient.post(`/api/notifications/event-updated/${eventId}`, {});
+    } catch (error) {
+      console.error("Failed to send event update notification:", error);
+      throw error;
     }
   }, []);
 
@@ -399,14 +610,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       unregisterFromEvent,
       toggleRegistration,
       createEvent,
+      updateEvent,
+      deleteEvent,
+      favoritedEventIds,
+      toggleFavorite,
+      fetchFavorites,
+      fetchEventReviews,
+      addReview,
+      deleteReview,
       notifications,
+      unreadNotificationCount,
       markAsRead,
       deleteNotification,
       markAllAsRead,
+      sendEventUpdateNotification,
       searchTerm,
       setSearchTerm,
       selectedCategory,
       setSelectedCategory,
+      filters,
+      setFilters,
+      showFavoritesOnly,
+      setShowFavoritesOnly,
       settings,
       updateSettings,
     }),
@@ -420,12 +645,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
       unregisterFromEvent,
       toggleRegistration,
       createEvent,
+      updateEvent,
+      deleteEvent,
+      favoritedEventIds,
+      toggleFavorite,
+      fetchFavorites,
+      fetchEventReviews,
+      addReview,
+      deleteReview,
       notifications,
+      unreadNotificationCount,
       markAsRead,
       deleteNotification,
       markAllAsRead,
+      sendEventUpdateNotification,
       searchTerm,
       selectedCategory,
+      filters,
+      showFavoritesOnly,
       settings,
       updateSettings,
       authLoading,

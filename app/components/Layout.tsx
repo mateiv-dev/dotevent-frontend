@@ -53,7 +53,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
               ? "events"
               : "";
 
-  const showBackButton = pathname.match(/^\/events\/\d+$/);
+  const showBackButton = pathname.match(/^\/events\/[^\/]+$/);
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
@@ -88,46 +88,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <Link
-            href="/dashboard"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
-          >
-            <LayoutDashboard size={20} />
-            Dashboard
-          </Link>
-          <Link
-            href="/events"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
-          >
-            <Calendar size={20} />
-            Browse Events
-          </Link>
-          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
-            <Link
-              href="/events/create"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "create" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
-            >
-              <Plus size={20} />
-              Create Event
-            </Link>
-          )}
-          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
-            <Link
-              href="/my-events"
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "my-events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
-            >
-              <FileText size={20} />
-              My Events
-            </Link>
-          )}
-          <Link
-            href="/my-requests"
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/my-requests" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
-          >
-            <ClipboardList size={20} />
-            My Requests
-          </Link>
-          {currentUser.role === "admin" && (
+          {currentUser.role && currentUser.role === "admin" && (
             <Link
               href="/admin"
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "admin" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
@@ -136,6 +97,51 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
               Admin
             </Link>
           )}
+
+          {currentUser.role !== "admin" && (
+            <Link
+              href="/dashboard"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "dashboard" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              <LayoutDashboard size={20} />
+              Dashboard
+            </Link>
+          )}
+          <Link
+            href="/events"
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+          >
+            <Calendar size={20} />
+            Browse Events
+          </Link>
+          {currentUser.role && ["student_rep", "organizer"].includes(currentUser.role) && (
+            <Link
+              href="/events/create"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "create" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              <Plus size={20} />
+              Create Event
+            </Link>
+          )}
+          {currentUser.role && ["student_rep", "organizer"].includes(currentUser.role) && (
+            <Link
+              href="/my-events"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === "my-events" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              <FileText size={20} />
+              My Events
+            </Link>
+          )}
+          {currentUser.role && currentUser.role !== "admin" && (
+            <Link
+              href="/my-requests"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/my-requests" ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              <ClipboardList size={20} />
+              My Requests
+            </Link>
+          )}
+
         </nav>
 
         <div className="p-6 border-t border-slate-800 text-center">
@@ -160,108 +166,112 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative">
-              <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className={`p-2 rounded-full relative transition-colors ${isNotifOpen ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-slate-100"}`}
-              >
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                )}
-              </button>
+            {currentUser?.role !== "admin" && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className={`p-2 rounded-full relative transition-colors ${isNotifOpen ? "bg-blue-50 text-blue-600" : "text-slate-500 hover:bg-slate-100"}`}
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                  )}
+                </button>
 
-              {isNotifOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40 bg-black/10 lg:hidden"
-                    onClick={() => setIsNotifOpen(false)}
-                  />
-                  <div className="fixed top-16 left-4 right-4 z-50 lg:absolute lg:top-full lg:right-0 lg:left-auto lg:w-96 mt-2 lg:mt-3 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="font-semibold text-slate-900">
-                        Notifications
-                      </h3>
-                      <div className="flex gap-3">
-                        {unreadCount > 0 && (
+                {isNotifOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40 bg-black/5"
+                      onClick={() => setIsNotifOpen(false)}
+                    />
+                    <div className="absolute top-full right-0 mt-3 w-80 md:w-96 z-50 bg-white rounded-xl shadow-2xl ring-1 ring-black/5 border border-slate-100/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 backdrop-blur-sm">
+                        <h3 className="font-semibold text-slate-900">
+                          Notifications
+                        </h3>
+                        <div className="flex gap-3">
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={markAllAsRead}
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                            >
+                              Mark all read
+                            </button>
+                          )}
                           <button
-                            onClick={markAllAsRead}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                            onClick={() => setIsNotifOpen(false)}
+                            className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                           >
-                            Mark all read
+                            <X size={18} />
                           </button>
-                        )}
-                        <button
-                          onClick={() => setIsNotifOpen(false)}
-                          className="lg:hidden text-slate-400 cursor-pointer"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="max-h-[60vh] lg:max-h-[400px] overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="p-8 text-center text-slate-500 text-sm">
-                          <Bell
-                            size={32}
-                            className="mx-auto mb-3 text-slate-300 opacity-50"
-                          />
-                          <p>No notifications yet</p>
                         </div>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 group ${notif.isRead ? "opacity-75" : "bg-blue-50/30"}`}
-                          >
-                            <div
-                              className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${notif.isRead ? "bg-slate-300" : "bg-blue-500"}`}
+                      </div>
+                      <div className="max-h-[60vh] lg:max-h-[400px] overflow-y-auto bg-white">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center text-slate-500 text-sm">
+                            <Bell
+                              size={32}
+                              className="mx-auto mb-3 text-slate-300 opacity-50"
                             />
-                            <div className="flex-1 space-y-1">
-                              <div className="flex justify-between items-start gap-2">
-                                <p
-                                  className={`text-sm ${notif.isRead ? "text-slate-600 font-medium" : "text-slate-900 font-bold"}`}
-                                >
-                                  {notif.title}
+                            <p>No notifications yet</p>
+                          </div>
+                        ) : (
+                          notifications.map((notif) => (
+                            <div
+                              key={notif.id}
+                              className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3 group ${notif.isRead ? "opacity-75" : "bg-blue-50/30"}`}
+                            >
+                              <div
+                                className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${notif.isRead ? "bg-slate-300" : "bg-blue-500"}`}
+                              />
+                              <div className="flex-1 space-y-1">
+                                <div className="flex justify-between items-start gap-2">
+                                  <p
+                                    className={`text-sm ${notif.isRead ? "text-slate-600 font-medium" : "text-slate-900 font-bold"}`}
+                                  >
+                                    {notif.title}
+                                  </p>
+                                  <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
+                                    {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-500 leading-relaxed">
+                                  {notif.type === "event_update" ? `Update for ${notif.relatedEvent?.title}` : notif.title}
                                 </p>
-                                <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
-                                  {notif.time}
-                                </span>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed">
-                                {notif.message}
-                              </p>
-                            </div>
-                            <div className="flex flex-col gap-1 justify-center pl-2 border-l border-slate-100 ml-1">
-                              {!notif.isRead && (
+                              <div className="flex flex-col gap-1 justify-center pl-2 border-l border-slate-100 ml-1">
+                                {!notif.isRead && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsRead(notif.id);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Mark as read"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    markAsRead(notif._id);
+                                    deleteNotification(notif.id);
                                   }}
-                                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Delete"
                                 >
-                                  <Check size={14} />
+                                  <Trash2 size={14} />
                                 </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotification(notif._id);
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -272,8 +282,10 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                   {currentUser.name}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {currentUser.role.charAt(0).toUpperCase() +
-                    currentUser.role.slice(1)}
+                  {currentUser.role
+                    ? currentUser.role.charAt(0).toUpperCase() +
+                    currentUser.role.slice(1).replace("_", " ")
+                    : "User"}
                 </p>
               </div>
               <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
@@ -309,7 +321,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
             <span className="text-[10px] font-medium">Events</span>
           </Link>
 
-          {["student_rep", "organizer", "admin"].includes(currentUser.role) && (
+          {currentUser.role && ["student_rep", "organizer"].includes(currentUser.role) && (
             <Link
               href="/events/create"
               className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === "create" ? "text-blue-400" : "text-slate-400"}`}
