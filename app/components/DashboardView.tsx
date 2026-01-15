@@ -5,6 +5,7 @@ import StatCard from "./StatCard";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
+import RecommendedEvents from "./RecommendedEvents";
 
 function DashboardView({
   currentUser,
@@ -101,6 +102,9 @@ function DashboardView({
           value={thirdStatValue}
         />
       </div>
+
+      {/* Recommendations Section - Only for students */}
+      {isStudent && <RecommendedEvents onEventClick={onEventClick} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="p-8">

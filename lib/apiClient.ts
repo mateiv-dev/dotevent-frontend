@@ -112,7 +112,8 @@ class APIClient {
       return text ? JSON.parse(text) : ({} as T);
     }
 
-    return {} as T;
+    const text = await response.text();
+    return text as unknown as T;
   }
 
   async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
@@ -146,6 +147,99 @@ class APIClient {
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
+
+  async getTotalStatistics(): Promise<TotalStatistics> {
+    return this.get<TotalStatistics>("/api/statistics");
+  }
+
+  async getRecommendedEvents(
+    page?: number,
+    limit?: number
+  ): Promise<RecommendedEvent[]> {
+    const params = new URLSearchParams();
+    if (page) params.append("page", page.toString());
+    if (limit) params.append("limit", limit.toString());
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return this.get<RecommendedEvent[]>(`/api/events/recommendations${query}`);
+  }
+
+  async getEventParticipants(eventId: string): Promise<ParticipantsResponse> {
+    return this.get<ParticipantsResponse>(`/api/events/${eventId}/participants`);
+  }
+
+  async exportParticipantsCSV(eventId: string): Promise<string> {
+    const response = await this.get<string>(
+      `/api/events/${eventId}/participants/export`
+    );
+    return response;
+  }
+
+  async checkInParticipant(eventId: string, ticketCode: string): Promise<void> {
+    return this.post(`/api/events/${eventId}/check-in/${ticketCode}`);
+  }
+
+  async getEventStatistics(eventId: string): Promise<EventStatistics> {
+    return this.get<EventStatistics>(`/api/events/${eventId}/statistics`);
+  }
+}
+
+export interface MonthlyActivity {
+  month: number;
+  count: number;
+}
+
+export interface TopOrganization {
+  name: string;
+  events: number;
+}
+
+export interface TotalStatistics {
+  totalEventsAllTime: number;
+  eventsLastMonth: number;
+  averageOccupancy: number;
+  monthlyActivity: MonthlyActivity[];
+  topOrganizations: TopOrganization[];
+}
+
+export interface RecommendedEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  capacity: number;
+  attendees: number;
+  organizer: {
+    represents: string | null;
+    organizationName: string | null;
+  };
+  description: string;
+  titleImage?: string;
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+export interface Participant {
+  name: string;
+  email: string;
+  role: string;
+  university: string | null;
+  represents: string | null;
+  organizationName: string | null;
+  registeredAt: string | null;
+}
+
+export interface ParticipantsResponse {
+  eventId: string;
+  participants: Participant[];
+  total: number;
+}
+
+export interface EventStatistics {
+  totalRegistrations: number;
+  checkedInCount: number;
+  attendanceRate: number;
 }
 
 export const apiClient = new APIClient();

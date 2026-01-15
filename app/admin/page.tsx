@@ -7,14 +7,15 @@ import Layout from "../components/Layout";
 import RoleRequestsTab from "../components/admin/RoleRequestsTab";
 import PendingEventsTab from "../components/admin/PendingEventsTab";
 import UsersTab from "../components/admin/UsersTab";
-import { Users, Calendar, Shield, UserCog } from "lucide-react";
+import StatisticsTab from "../components/admin/StatisticsTab";
+import { Users, Calendar, Shield, UserCog, BarChart3 } from "lucide-react";
 
-type AdminTab = "role-requests" | "pending-events" | "users";
+type AdminTab = "statistics" | "role-requests" | "pending-events" | "users";
 
 export default function AdminPage() {
   const router = useRouter();
   const { currentUser, isLoading } = useApp();
-  const [activeTab, setActiveTab] = useState<AdminTab>("role-requests");
+  const [activeTab, setActiveTab] = useState<AdminTab>("statistics");
 
   useEffect(() => {
     if (!isLoading) {
@@ -37,6 +38,7 @@ export default function AdminPage() {
   }
 
   const tabs = [
+    { id: "statistics" as AdminTab, label: "Statistics", icon: BarChart3 },
     { id: "role-requests" as AdminTab, label: "Role Requests", icon: Users },
     {
       id: "pending-events" as AdminTab,
@@ -88,6 +90,7 @@ export default function AdminPage() {
           </div>
 
           <div className="p-6">
+            {activeTab === "statistics" && <StatisticsTab />}
             {activeTab === "role-requests" && <RoleRequestsTab />}
             {activeTab === "pending-events" && <PendingEventsTab />}
             {activeTab === "users" && <UsersTab />}

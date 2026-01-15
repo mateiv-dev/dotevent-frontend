@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
 import Layout from "../components/Layout";
 import EditEventModal from "../components/EditEventModal";
+import ParticipantsModal from "../components/ParticipantsModal";
+import CheckInModal from "../components/CheckInModal";
 import { apiClient } from "../../lib/apiClient";
 import {
   Calendar,
@@ -18,6 +20,8 @@ import {
   Edit,
   Trash2,
   Plus,
+  UserCheck,
+  ScanLine,
 } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { getImageUrl } from "../utils/imageUtils";
@@ -51,6 +55,8 @@ export default function MyEventsPage() {
   const [editingEvent, setEditingEvent] = useState<MyEvent | null>(null);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [participantsEvent, setParticipantsEvent] = useState<MyEvent | null>(null);
+  const [checkInEvent, setCheckInEvent] = useState<MyEvent | null>(null);
 
   useEffect(() => {
     if (
@@ -279,13 +285,29 @@ export default function MyEventsPage() {
                       {/* Action Buttons */}
                       <div className="flex flex-col gap-2 shrink-0">
                         {event.status === "approved" && (
-                          <button
-                            onClick={() => setEditingEvent(event)}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit event"
-                          >
-                            <Edit size={18} />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setCheckInEvent(event)}
+                              className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              title="Check-in participants"
+                            >
+                              <ScanLine size={18} />
+                            </button>
+                            <button
+                              onClick={() => setParticipantsEvent(event)}
+                              className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="View participants"
+                            >
+                              <UserCheck size={18} />
+                            </button>
+                            <button
+                              onClick={() => setEditingEvent(event)}
+                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit event"
+                            >
+                              <Edit size={18} />
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => setShowDeleteConfirm(event.id)}
@@ -345,6 +367,26 @@ export default function MyEventsPage() {
           onClose={() => setEditingEvent(null)}
           event={editingEvent}
           onSave={handleEditEvent}
+        />
+      )}
+
+      {/* Participants Modal */}
+      {participantsEvent && (
+        <ParticipantsModal
+          isOpen={!!participantsEvent}
+          onClose={() => setParticipantsEvent(null)}
+          eventId={participantsEvent.id}
+          eventTitle={participantsEvent.title}
+        />
+      )}
+
+      {/* Check-In Modal */}
+      {checkInEvent && (
+        <CheckInModal
+          isOpen={!!checkInEvent}
+          onClose={() => setCheckInEvent(null)}
+          eventId={checkInEvent.id}
+          eventTitle={checkInEvent.title}
         />
       )}
     </Layout>
