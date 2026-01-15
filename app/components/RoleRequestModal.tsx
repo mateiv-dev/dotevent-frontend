@@ -33,7 +33,6 @@ export default function RoleRequestModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Autofill university for students requesting student_rep role
   useEffect(() => {
     if (isOpen && currentUser && currentUser.role === "student" && requestedRole === "student_rep") {
       const studentUser = currentUser as any;

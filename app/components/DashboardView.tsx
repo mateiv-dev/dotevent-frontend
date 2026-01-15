@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle2, Users, Clock } from "lucide-react";
+import { Calendar, CheckCircle2, Users, Clock, Heart } from "lucide-react";
 import Event from "../types/event";
 import { User } from "../types/user";
 import StatCard from "./StatCard";
@@ -30,7 +30,6 @@ function DashboardView({
   const isStudent = ["simple_user", "student", "student_rep"].includes(currentUser.role);
   const isOrganizer = ["organizer", "admin"].includes(currentUser.role);
 
-  // Dynamic Content Logic
   const myEvents = isOrganizer
     ? createdEvents
     : events.filter(e => e.isRegistered);
@@ -43,10 +42,12 @@ function DashboardView({
       ? `There ${unregisteredEvents.length === 1 ? "is" : "are"} ${unregisteredEvents.length} new ${unregisteredEvents.length === 1 ? "event" : "events"} available for you to join.`
       : "You're all caught up! No new events at the moment.";
 
-  const thirdStatLabel = isOrganizer ? "Events Created" : "Events Joined";
+  const favoritedCount = events.filter((e) => e.isFavorited).length;
+
+  const thirdStatLabel = isOrganizer ? "Events Created" : "Favorite Events";
   const thirdStatValue = isOrganizer
     ? myEvents.length.toString()
-    : registeredCount.toString();
+    : favoritedCount.toString();
 
   const nextUpTitle = isOrganizer ? "Your Upcoming Events" : "Next Up For You";
   const emptyStateMessage = isOrganizer ? "You haven't created any upcoming events." : "No upcoming registrations.";
@@ -89,7 +90,13 @@ function DashboardView({
           />
         )}
         <StatCard
-          icon={<Users className="text-purple-600" size={24} />}
+          icon={
+            isOrganizer ? (
+              <Users className="text-purple-600" size={24} />
+            ) : (
+              <Heart className="text-red-500" size={24} />
+            )
+          }
           label={thirdStatLabel}
           value={thirdStatValue}
         />

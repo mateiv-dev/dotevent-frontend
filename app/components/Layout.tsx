@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 
 import SettingsModal from "./SettingsModal";
+import { getNotificationText, getNotificationTitle } from "../utils/notificationUtils";
+import { formatRole } from "../utils/formatters";
 
 interface LayoutProps {
   children: ReactNode;
@@ -229,14 +231,14 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                                   <p
                                     className={`text-sm ${notif.isRead ? "text-slate-600 font-medium" : "text-slate-900 font-bold"}`}
                                   >
-                                    {notif.title}
+                                    {getNotificationTitle(notif)}
                                   </p>
                                   <span className="text-[10px] text-slate-400 whitespace-nowrap mt-0.5">
                                     {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                                 <p className="text-xs text-slate-500 leading-relaxed">
-                                  {notif.type === "event_update" ? `Update for ${notif.relatedEvent?.title}` : notif.title}
+                                  {getNotificationText(notif)}
                                 </p>
                               </div>
                               <div className="flex flex-col gap-1 justify-center pl-2 border-l border-slate-100 ml-1">
@@ -282,10 +284,7 @@ export default function Layout({ children, pageTitle }: LayoutProps) {
                   {currentUser.name}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {currentUser.role
-                    ? currentUser.role.charAt(0).toUpperCase() +
-                    currentUser.role.slice(1).replace("_", " ")
-                    : "User"}
+                  {formatRole(currentUser.role)}
                 </p>
               </div>
               <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm shrink-0">

@@ -15,6 +15,7 @@ export interface Student extends BaseUser {
 
 export interface StudentRep extends BaseUser {
   role: "student_rep";
+  university: string;
   represents: string;
 }
 

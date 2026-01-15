@@ -35,13 +35,6 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       await signUp(email, password, { name });
-
-      // Although new users are simple_user by default, if we ever support
-      // creating other roles or if an admin account is created via some other flow here
-      // we check for consistency.
-      // For now, new registrations go to dashboard.
-      // But if there's any claim logic in signUp that sets admin (unlikely), handle it.
-
       await new Promise((resolve) => setTimeout(resolve, 1500));
       router.push("/dashboard");
     } catch (err: any) {

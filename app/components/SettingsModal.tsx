@@ -22,6 +22,7 @@ import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { Checkbox } from "./ui/Checkbox";
 import RoleRequestModal from "./RoleRequestModal";
+import { formatRole } from "../utils/formatters";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -40,7 +41,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
-  const [roleField, setRoleField] = useState("");
+  const [university, setUniversity] = useState("");
+  const [represents, setRepresents] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
 
   useEffect(() => {
     if (isOpen && currentUser) {
@@ -49,13 +52,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setSaveError("");
 
       if (currentUser.role === "student") {
-        setRoleField((currentUser as any).university);
+        setUniversity((currentUser as any).university || "");
       } else if (currentUser.role === "organizer") {
-        setRoleField((currentUser as any).organizationName);
+        setOrganizationName((currentUser as any).organizationName || "");
       } else if (currentUser.role === "student_rep") {
-        setRoleField((currentUser as any).represents);
-      } else {
-        setRoleField("");
+        setRepresents((currentUser as any).represents || "");
+        setUniversity((currentUser as any).university || "");
       }
     }
   }, [isOpen, currentUser]);
@@ -68,14 +70,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setIsSaving(true);
     setSaveError("");
 
+    if (email !== currentUser.email) {
+      setSaveError("Changing email address is not currently available.");
+      setIsSaving(false);
+      return;
+    }
+
     const userUpdates: any = { name };
 
     if (currentUser.role === "student") {
-      userUpdates.university = roleField;
+      userUpdates.university = university;
     } else if (currentUser.role === "organizer") {
-      userUpdates.organizationName = roleField;
+      userUpdates.organizationName = organizationName;
     } else if (currentUser.role === "student_rep") {
-      userUpdates.represents = roleField;
+      userUpdates.represents = represents;
+      userUpdates.university = university;
     }
 
     try {
@@ -187,28 +196,51 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
                     Your current role:{" "}
                     <span className="font-medium capitalize">
-                      {currentUser.role?.replace("_", " ") || "User"}
+                      {formatRole(currentUser.role)}
                     </span>
                   </p>
 
-                  {currentUser.role && currentUser.role !== "organizer" &&
-                    currentUser.role !== "admin" && (
+                  {/* Student University Input */}
+                  {currentUser.role === "student" && (
+                    <Input
+                      label="University / Department"
+                      leftIcon={<Building size={16} />}
+                      value={university}
+                      onChange={(e) => setUniversity(e.target.value)}
+                      containerClassName="mb-4"
+                    />
+                  )}
+
+                  {/* Student Rep Inputs */}
+                  {currentUser.role === "student_rep" && (
+                    <>
                       <Input
-                        label={
-                          currentUser.role === "student"
-                            ? "University / Department"
-                            : currentUser.role === "student_rep"
-                              ? "Represents (Faculty/Dorm/Organization)"
-                              : "Organization"
-                        }
+                        label="University"
                         leftIcon={<Building size={16} />}
-                        value={roleField}
-                        onChange={(e) => setRoleField(e.target.value)}
-                        disabled={currentUser.role === "simple_user"}
-                        className="disabled:bg-slate-50 disabled:text-slate-500"
+                        value={university}
+                        onChange={(e) => setUniversity(e.target.value)}
                         containerClassName="mb-4"
                       />
-                    )}
+                      <Input
+                        label="Represents (Faculty/Dorm/Organization)"
+                        leftIcon={<Building size={16} />}
+                        value={represents}
+                        onChange={(e) => setRepresents(e.target.value)}
+                        containerClassName="mb-4"
+                      />
+                    </>
+                  )}
+
+                  {/* Organizer Input */}
+                  {currentUser.role === "organizer" && (
+                    <Input
+                      label="Organization"
+                      leftIcon={<Building size={16} />}
+                      value={organizationName}
+                      onChange={(e) => setOrganizationName(e.target.value)}
+                      containerClassName="mb-4"
+                    />
+                  )}
 
                   {currentUser.role && currentUser.role !== "admin" &&
                     currentUser.role !== "organizer" && (

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Event from "../types/event";
 import { useApp } from "../context/AppContext";
 import { getCategoryStyles } from "../utils/categoryStyles";
+import { getImageUrl } from "../utils/imageUtils";
 
 function EventListView({
   events,
@@ -371,9 +372,19 @@ function EventListView({
               onClick={() => onEventClick(event.id)}
               className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer h-full"
             >
-              <div className="h-32 relative overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryStyles(event.category).gradient}`}></div>
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 uppercase tracking-wide shadow-sm">
+              <div className="h-48 relative overflow-hidden group-hover:opacity-90 transition-opacity bg-slate-100">
+                {event.titleImage ? (
+                  <img
+                    src={getImageUrl(event.titleImage) || ""}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryStyles(event.category).gradient}`}></div>
+                )}
+
+                {/* Category Badge */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 uppercase tracking-wide shadow-sm z-10">
                   {event.category}
                 </div>
 
@@ -381,7 +392,7 @@ function EventListView({
                 {currentUser && !["organizer", "admin"].includes(currentUser.role) && (
                   <button
                     onClick={(e) => handleFavoriteClick(e, event.id)}
-                    className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-md transition-all ${event.isFavorited
+                    className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-md transition-all z-10 ${event.isFavorited
                       ? "bg-pink-500 text-white"
                       : "bg-white/80 text-slate-400 hover:text-pink-500"
                       }`}
@@ -392,7 +403,7 @@ function EventListView({
 
                 {/* Rating Badge */}
                 {event.averageRating && event.averageRating > 0 && (
-                  <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                  <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm z-10">
                     <Star size={12} className="text-amber-500" fill="currentColor" />
                     <span className="text-xs font-bold text-slate-700">{event.averageRating.toFixed(1)}</span>
                     <span className="text-xs text-slate-500">({event.reviewCount})</span>

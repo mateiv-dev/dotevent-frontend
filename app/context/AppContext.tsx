@@ -18,6 +18,7 @@ import { useAuth } from "./AuthContext";
 import { apiClient } from "../../lib/apiClient";
 import { uploadClient } from "../../lib/uploadClient";
 
+
 export interface EventFilters {
   category?: string;
   faculty?: string;
@@ -128,7 +129,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Don't fetch if user data is loading or if user is admin
     if (!currentUser || currentUser.role === 'admin') {
       return;
     }
@@ -136,12 +136,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const notificationsData = await apiClient.get<any[]>("/api/notifications");
       setNotifications(notificationsData);
-      // Also fetch unread count
       try {
         const countData = await apiClient.get<{ count: number }>("/api/notifications/unread-count");
         setUnreadNotificationCount(countData.count);
       } catch {
-        // Fallback: calculate from notifications
         setUnreadNotificationCount(notificationsData.filter((n: any) => !n.isRead).length);
       }
     } catch (error) {
@@ -158,6 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
       const mappedEvents: Event[] = eventsData.map((event: any) => ({
         id: event._id || event.id,
+        createdAt: event.createdAt,
         title: event.title,
         date: event.date,
         time: event.time,
@@ -227,13 +226,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
           const userData = await apiClient.get<any>("/api/users/me");
 
-          // Ensure role field exists - if not, it means we have stale data
           if (!userData.role) {
             console.warn("User data missing role field, clearing cache and refetching");
             if (typeof window !== "undefined") {
               localStorage.removeItem("currentUser");
             }
-            // The role should be in the response, so this is an error
             throw new Error("User data is incomplete - missing role field");
           }
 
@@ -287,6 +284,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!currentUser) return;
 
       try {
+
+
         const updatedUserData = await apiClient.put<any>(
           "/api/users/me",
           updates,
@@ -306,7 +305,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [currentUser],
+    [currentUser, firebaseUser],
   );
 
   const updateSettings = useCallback((updates: Partial<UserSettings>) => {
@@ -397,7 +396,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           time: newEvent.time,
           location: newEvent.location,
           category: newEvent.category,
-          capacity: newEvent.capacity,
           capacity: newEvent.capacity,
           contact: newEvent.contact,
           description: newEvent.description,
@@ -529,7 +527,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await apiClient.put(`/api/events/${eventId}`, { ...eventData, filesToDelete });
         }
 
-        // Send notifications to registered participants about the update
         try {
           await apiClient.post(`/api/notifications/event-updated/${eventId}`, {});
         } catch (notifError) {

@@ -18,12 +18,15 @@ import {
   MessageSquare,
   Trash2,
   X,
+  Paperclip,
+  FileText,
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import Layout from "../../components/Layout";
 import Event from "../../types/event";
 import Review from "../../types/review";
 import { getCategoryStyles } from "../../utils/categoryStyles";
+import { getImageUrl } from "../../utils/imageUtils";
 
 export default function EventDetailsPage({
   params,
@@ -194,6 +197,17 @@ export default function EventDetailsPage({
     ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(event.ticketCode)}`
     : null;
 
+  const displayAttachments = [...(event.attachments || [])];
+  if (event.titleImage && !displayAttachments.some(a => a.url === event.titleImage)) {
+    displayAttachments.unshift({
+      url: event.titleImage,
+      name: "Cover Image",
+      fileType: "image",
+      size: 0,
+      uploadedAt: event.createdAt
+    });
+  }
+
   return (
     <Layout pageTitle="Event Details">
       <div className="space-y-8 max-w-5xl mx-auto">
@@ -201,6 +215,17 @@ export default function EventDetailsPage({
         <div
           className={`relative rounded-2xl overflow-hidden bg-gradient-to-br ${getCategoryStyles(event.category).gradient} p-8 md:p-12 text-white shadow-lg`}
         >
+          {event.titleImage && (
+            <>
+              <div className="absolute inset-0 bg-black/40 z-0"></div>
+              <img
+                src={getImageUrl(event.titleImage) || ""}
+                alt={event.title}
+                className="absolute inset-0 w-full h-full object-cover -z-10"
+              />
+            </>
+          )}
+
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-sm font-semibold">
@@ -218,13 +243,13 @@ export default function EventDetailsPage({
               )}
             </div>
 
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight max-w-3xl">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight max-w-3xl drop-shadow-lg">
               {event.title}
             </h1>
             <div className="flex flex-wrap gap-6 text-blue-50">
               <div className="flex items-center gap-2">
-                <Calendar size={20} />
-                <span className="font-medium">
+                <Calendar size={20} className="text-white" />
+                <span className="font-medium text-white text-shadow">
                   {new Date(event.date).toLocaleDateString(undefined, {
                     weekday: "long",
                     month: "long",
@@ -234,15 +259,15 @@ export default function EventDetailsPage({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock size={20} />
-                <span className="font-medium">{event.time}</span>
+                <Clock size={20} className="text-white" />
+                <span className="font-medium text-white text-shadow">{event.time}</span>
               </div>
               <button
                 onClick={handleOpenMap}
                 className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
               >
-                <MapPin size={20} />
-                <span className="font-medium underline decoration-dotted">{event.location}</span>
+                <MapPin size={20} className="text-white" />
+                <span className="font-medium text-white underline decoration-dotted text-shadow">{event.location}</span>
               </button>
             </div>
 
@@ -250,24 +275,69 @@ export default function EventDetailsPage({
             {(event.faculty || event.department) && (
               <div className="mt-4 flex flex-wrap gap-3">
                 {event.faculty && (
-                  <span className="px-3 py-1 rounded-full bg-white/10 text-sm">
+                  <span className="px-3 py-1 rounded-full bg-white/10 text-sm backdrop-blur-sm">
                     Faculty: {event.faculty}
                   </span>
                 )}
                 {event.department && (
-                  <span className="px-3 py-1 rounded-full bg-white/10 text-sm">
+                  <span className="px-3 py-1 rounded-full bg-white/10 text-sm backdrop-blur-sm">
                     Department: {event.department}
                   </span>
                 )}
               </div>
             )}
           </div>
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-60 h-60 rounded-full bg-black/10 blur-3xl"></div>
+          {!event.titleImage && (
+            <>
+              <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-60 h-60 rounded-full bg-black/10 blur-3xl"></div>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
+            {/* Attachments Section */}
+            {displayAttachments.length > 0 && (
+              <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Paperclip className="text-blue-500" size={24} />
+                  Attachments
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {displayAttachments.map((attachment, index) => (
+                    <a
+                      key={index}
+                      href={getImageUrl(attachment.url) || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative flex flex-col bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                    >
+                      <div className="aspect-video w-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                        {attachment.fileType === "image" ? (
+                          <img
+                            src={getImageUrl(attachment.url) || ""}
+                            alt={attachment.name}
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <FileText size={40} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                        )}
+                      </div>
+                      <div className="p-3 bg-white border-t border-slate-100 flex-1 flex flex-col justify-center">
+                        <p className="text-sm font-medium text-slate-700 truncate" title={attachment.name}>
+                          {attachment.name}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {attachment.size > 0 ? `${(attachment.size / 1024).toFixed(1)} KB` : "View file"}
+                        </p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* About Section */}
             <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
               <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -300,7 +370,7 @@ export default function EventDetailsPage({
                     {organizerName}
                   </p>
                   <p className="text-slate-500">
-                    Contact: events@university.edu
+                    Contact: {(typeof event.organizer !== 'string' && event.organizer?.contact) || event.author?.email || "events@university.edu"}
                   </p>
                 </div>
               </div>

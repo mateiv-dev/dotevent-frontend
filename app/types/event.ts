@@ -12,10 +12,12 @@ export interface Attachment {
 export interface Organizer {
   represents: string | null;
   organizationName: string | null;
+  contact?: string;
 }
 
 export default interface Event {
   id: string;
+  createdAt: string;
   title: string;
   date: string;
   time: string;

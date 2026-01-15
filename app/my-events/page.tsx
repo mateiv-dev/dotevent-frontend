@@ -20,6 +20,7 @@ import {
   Plus,
 } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
+import { getImageUrl } from "../utils/imageUtils";
 
 interface MyEvent {
   id: string;
@@ -37,6 +38,7 @@ interface MyEvent {
   createdAt: string;
   faculty?: string;
   department?: string;
+  titleImage?: string;
   attachments?: Array<{ url: string; name: string }>;
 }
 
@@ -183,13 +185,6 @@ export default function MyEventsPage() {
             <p className="text-slate-500 mb-4">
               Create your first event to see it here
             </p>
-            <button
-              onClick={() => router.push("/events/create")}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus size={18} />
-              Create Event
-            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -205,7 +200,17 @@ export default function MyEventsPage() {
                     className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`}
                   />
                   <div className="p-5">
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      {event.titleImage && (
+                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                          <img
+                            src={getImageUrl(event.titleImage) || ""}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold text-lg text-slate-900">
