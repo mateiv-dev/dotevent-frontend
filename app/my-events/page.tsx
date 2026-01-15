@@ -37,7 +37,7 @@ interface MyEvent {
   category: string;
   capacity: number;
   attendees: number;
-  organizer: string;
+  organizer: { represents?: string | null; organizationName?: string | null; contact: string };
   description: string;
   status: "pending" | "approved" | "rejected";
   rejectionReason?: string;
@@ -375,7 +375,10 @@ export default function MyEventsPage() {
         <EditEventModal
           isOpen={!!editingEvent}
           onClose={() => setEditingEvent(null)}
-          event={editingEvent}
+          event={{
+            ...editingEvent,
+            contact: editingEvent.organizer.contact,
+          }}
           onSave={handleEditEvent}
         />
       )}

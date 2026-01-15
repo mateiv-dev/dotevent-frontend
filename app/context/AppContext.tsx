@@ -78,6 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
+  const [ticketCodesByEventId, setTicketCodesByEventId] = useState<Map<string, string>>(new Map());
   const [favoritedEventIds, setFavoritedEventIds] = useState<Set<string>>(new Set());
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -93,16 +94,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchUserRegistrations = useCallback(async () => {
     if (!firebaseUser) {
       setRegisteredEventIds(new Set());
+      setTicketCodesByEventId(new Map());
       return;
     }
 
     try {
       const registeredEvents = await apiClient.get<any[]>("/api/users/me/registrations");
       const eventIds = new Set(registeredEvents.map((reg: any) => reg.event._id || reg.event.id));
+      const ticketCodes = new Map<string, string>();
+      registeredEvents.forEach((reg: any) => {
+        const eventId = reg.event._id || reg.event.id;
+        if (reg.ticketCode) {
+          ticketCodes.set(eventId, reg.ticketCode);
+        }
+      });
       setRegisteredEventIds(eventIds);
+      setTicketCodesByEventId(ticketCodes);
     } catch (error) {
       console.error("Failed to fetch user registrations:", error);
       setRegisteredEventIds(new Set());
+      setTicketCodesByEventId(new Map());
     }
   }, [firebaseUser]);
 
@@ -154,30 +165,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const eventsData = await apiClient.get<any[]>("/api/events", {
         requiresAuth: false,
       });
-      const mappedEvents: Event[] = eventsData.map((event: any) => ({
-        id: event._id || event.id,
-        createdAt: event.createdAt,
-        title: event.title,
-        date: event.date,
-        time: event.time,
-        location: event.location,
-        category: event.category,
-        attendees: event.attendees || 0,
-        capacity: event.capacity,
-        organizer: event.organizer,
-        description: event.description,
-        status: event.status,
-        rejectionReason: event.rejectionReason,
-        isRegistered: registeredEventIds.has(event._id || event.id),
-        isFavorited: favoritedEventIds.has(event._id || event.id),
-        faculty: event.faculty,
-        department: event.department,
-        titleImage: event.titleImage,
-        attachments: event.attachments,
-        averageRating: event.averageRating || 0,
-        reviewCount: event.reviewCount || 0,
-        author: event.author,
-      }));
+      const mappedEvents: Event[] = eventsData.map((event: any) => {
+        const eventId = event._id || event.id;
+        return {
+          id: eventId,
+          createdAt: event.createdAt,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          location: event.location,
+          category: event.category,
+          attendees: event.attendees || 0,
+          capacity: event.capacity,
+          organizer: event.organizer,
+          description: event.description,
+          status: event.status,
+          rejectionReason: event.rejectionReason,
+          isRegistered: registeredEventIds.has(eventId),
+          isFavorited: favoritedEventIds.has(eventId),
+          ticketCode: ticketCodesByEventId.get(eventId),
+          faculty: event.faculty,
+          department: event.department,
+          titleImage: event.titleImage,
+          attachments: event.attachments,
+          averageRating: event.averageRating || 0,
+          reviewCount: event.reviewCount || 0,
+          author: event.author,
+        };
+      });
       setEvents(mappedEvents);
     } catch (error) {
       console.error("Failed to fetch events:", error);
@@ -185,7 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } finally {
       setEventsLoading(false);
     }
-  }, [registeredEventIds, favoritedEventIds]);
+  }, [registeredEventIds, favoritedEventIds, ticketCodesByEventId]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -336,6 +351,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const ticketCode = registration.ticketCode;
 
       setRegisteredEventIds((prev) => new Set(prev).add(eventId));
+      setTicketCodesByEventId((prev) => new Map(prev).set(eventId, ticketCode));
 
       setEvents((prevEvents) =>
         prevEvents.map((ev) => {
@@ -366,6 +382,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const newSet = new Set(prev);
         newSet.delete(eventId);
         return newSet;
+      });
+
+      setTicketCodesByEventId((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(eventId);
+        return newMap;
       });
 
       setEvents((prevEvents) =>

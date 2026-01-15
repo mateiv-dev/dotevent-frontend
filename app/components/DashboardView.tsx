@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle2, Users, Clock, Heart } from "lucide-react";
+import { Calendar, CheckCircle2, Users, Clock, Heart, Ticket, QrCode } from "lucide-react";
 import Event from "../types/event";
 import { User } from "../types/user";
 import StatCard from "./StatCard";
@@ -6,6 +6,7 @@ import { getCategoryStyles } from "../utils/categoryStyles";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
 import RecommendedEvents from "./RecommendedEvents";
+import { useState } from "react";
 
 function DashboardView({
   currentUser,
@@ -24,6 +25,8 @@ function DashboardView({
   toCreateEvent: () => void;
   onEventClick: (id: string) => void;
 }) {
+  const [selectedTicket, setSelectedTicket] = useState<Event | null>(null);
+  
   const unregisteredEvents = events.filter((e) => !e.isRegistered);
   const nextUnregisteredEvent =
     unregisteredEvents.length > 0 ? unregisteredEvents[0] : null;
@@ -34,6 +37,9 @@ function DashboardView({
   const myEvents = isOrganizer
     ? createdEvents
     : events.filter(e => e.isRegistered);
+
+  // Events with tickets (registered events that have a ticket code)
+  const myTickets = events.filter(e => e.isRegistered && e.ticketCode).slice(0, 3);
 
   const nextUpEvents = myEvents.filter(e => new Date(e.date) >= new Date()).slice(0, 3);
 
@@ -174,6 +180,88 @@ function DashboardView({
             </div>
           )}
         </Card>
+
+        {/* My Tickets Card - Only for students */}
+        {isStudent && (
+          <Card className="p-8">
+            <h3 className="font-bold text-xl text-slate-900 mb-6 flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                <Ticket size={20} />
+              </div>
+              My Tickets
+            </h3>
+            {myTickets.length > 0 ? (
+              <div className="space-y-4">
+                {myTickets.map((event: Event) => (
+                  <div
+                    key={event.id}
+                    className="p-4 border border-slate-100 hover:border-purple-200 cursor-pointer hover:bg-purple-50/30 rounded-2xl transition-all group"
+                    onClick={() => setSelectedTicket(selectedTicket?.id === event.id ? null : event)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-slate-900 line-clamp-1 group-hover:text-purple-700 transition-colors">
+                          {event.title}
+                        </h4>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                          {new Date(event.date).toLocaleDateString()} at {event.time}
+                        </p>
+                      </div>
+                      <div className="ml-3 p-2 bg-purple-100 text-purple-600 rounded-lg">
+                        <QrCode size={20} />
+                      </div>
+                    </div>
+                    
+                    {/* Expandable ticket details */}
+                    {selectedTicket?.id === event.id && event.ticketCode && (
+                      <div className="mt-4 pt-4 border-t border-slate-100 animate-in slide-in-from-top-2 duration-200">
+                        <p className="text-xs text-slate-500 font-medium mb-2 text-center">Your Ticket Code</p>
+                        <code className="block bg-white border border-purple-200 rounded-lg px-3 py-2 text-sm font-mono text-purple-900 text-center tracking-wider mb-3">
+                          {event.ticketCode}
+                        </code>
+                        <div className="flex flex-col items-center">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(event.ticketCode)}`}
+                            alt="Ticket QR Code"
+                            className="w-28 h-28 rounded-lg border border-purple-200"
+                          />
+                          <p className="text-xs text-purple-600 mt-2">Show this at the event</p>
+                        </div>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEventClick(event.id);
+                          }}
+                          variant="ghost"
+                          className="w-full mt-3 text-purple-600 hover:bg-purple-100"
+                        >
+                          View Event Details
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <Ticket className="mx-auto h-10 w-10 text-slate-300 mb-3" />
+                <p className="text-slate-400 font-medium">
+                  No tickets yet
+                </p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Register for events to get your tickets
+                </p>
+                <Button
+                  onClick={toEvents}
+                  variant="ghost"
+                  className="text-purple-600 hover:bg-transparent hover:underline p-0 h-auto mt-2"
+                >
+                  Browse events
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -185,20 +185,10 @@ export default function EventDetailsPage({
     }
   };
 
-  const getEventStartTime = () => {
-    const startTime = new Date(event.date);
-    if (event.time) {
-      const [hours, minutes] = event.time.split(':');
-      startTime.setHours(parseInt(hours!), parseInt(minutes!), 0, 0);
-    } else {
-      startTime.setHours(0, 0, 0, 0);
-    }
-    return startTime;
-  };
-
-  const eventDate = new Date(event.date);
-  const eventStartTime = getEventStartTime();
-  const canReview = currentUser && event.isRegistered && eventStartTime <= new Date();
+  const eventStartTime = new Date(event.date);
+  const now = new Date();
+  const reviewGracePeriod = 120 * 60 * 1000;
+  const canReview = currentUser && event.isRegistered && (eventStartTime.getTime() - reviewGracePeriod) <= now.getTime();
   const userHasReviewed = reviews.some(r => r.user.id === currentUser?.id);
 
   const organizerName = typeof event.organizer === 'string'

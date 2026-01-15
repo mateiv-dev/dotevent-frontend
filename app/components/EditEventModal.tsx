@@ -30,7 +30,7 @@ interface EditEventModalProps {
     location: string;
     category: string;
     capacity: number;
-    organizer: string;
+    contact: string;
     description: string;
     faculty?: string;
     department?: string;
@@ -59,7 +59,7 @@ export default function EditEventModal({
     category: "Academic",
     description: "",
     capacity: 100,
-    organizer: "",
+    contact: "",
     faculty: "",
     department: "",
   });
@@ -77,7 +77,7 @@ export default function EditEventModal({
         category: event.category,
         description: event.description,
         capacity: event.capacity,
-        organizer: event.organizer,
+        contact: event.contact,
         faculty: event.faculty || "",
         department: event.department || "",
       });
@@ -252,13 +252,13 @@ export default function EditEventModal({
                 disabled={isSubmitting}
               />
               <Input
-                label="Organizer"
+                label="Contact Info"
                 required
-                placeholder="Organization or Person Name"
+                placeholder="Email or Phone Number"
                 leftIcon={<User size={16} />}
-                value={formData.organizer}
+                value={formData.contact}
                 onChange={(e) =>
-                  setFormData({ ...formData, organizer: e.target.value })
+                  setFormData({ ...formData, contact: e.target.value })
                 }
                 disabled={isSubmitting}
               />
