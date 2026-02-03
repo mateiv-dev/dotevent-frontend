@@ -1,9 +1,10 @@
-import { Search, Calendar, MapPin, Users, Filter, Heart, Star, ChevronLeft, ChevronRight, Grid, CalendarDays } from "lucide-react";
+import { Search, Calendar, MapPin, Users, Filter, Heart, Star, ChevronLeft, ChevronRight, Grid, CalendarDays, Check } from "lucide-react";
 import { useState } from "react";
 import Event from "../types/event";
 import { useApp } from "../context/AppContext";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { getImageUrl } from "../utils/imageUtils";
+import { useTranslation } from "../hooks/useTranslation";
 
 function EventListView({
   events,
@@ -28,6 +29,7 @@ function EventListView({
     setFilters,
     currentUser
   } = useApp();
+  const { t } = useTranslation();
 
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -114,13 +116,13 @@ function EventListView({
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] group-focus-within:text-blue-500 transition-colors"
               size={20}
             />
             <input
               type="text"
-              placeholder="Search events by title, category, or location..."
-              className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm hover:shadow-md focus:shadow-lg"
+              placeholder={t("eventList.searchPlaceholder")}
+              className="w-full pl-12 pr-4 py-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm hover:shadow-md focus:shadow-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -133,32 +135,36 @@ function EventListView({
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              <option>All Categories</option>
-              <option>Academic</option>
-              <option>Social</option>
-              <option>Sports</option>
-              <option>Career</option>
+              <option value="All Categories">{t("eventList.allCategories")}</option>
+              <option value="Academic">{t("eventList.category.academic")}</option>
+              <option value="Social">{t("eventList.category.social")}</option>
+              <option value="Sports">{t("eventList.category.sports")}</option>
+              <option value="Career">{t("eventList.category.career")}</option>
             </select>
-            <div className="w-full h-full px-4 py-4 rounded-2xl border border-slate-200 bg-white text-slate-700 font-medium shadow-sm hover:shadow-md transition-all flex items-center gap-3">
-              <Filter className="text-slate-400 shrink-0" size={20} />
-              <span className="truncate">{selectedCategory}</span>
-              <svg className="ml-auto text-slate-400 shrink-0" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <div className="w-full h-full px-4 py-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] font-medium shadow-sm hover:shadow-md transition-all flex items-center gap-3">
+              <Filter className="text-[var(--muted-foreground)] shrink-0" size={20} />
+              <span className="truncate">
+                {selectedCategory === "All Categories"
+                  ? t("eventList.allCategories")
+                  : t(`eventList.category.${selectedCategory.toLowerCase()}` as any) || selectedCategory}
+              </span>
+              <svg className="ml-auto text-[var(--muted-foreground)] shrink-0" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="flex rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-4 py-3 flex items-center gap-2 transition-colors ${viewMode === "grid" ? "bg-blue-50 text-blue-600" : "text-slate-600 hover:bg-slate-50"}`}
+              className={`px-4 py-3 flex items-center gap-2 transition-colors ${viewMode === "grid" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"}`}
             >
               <Grid size={20} />
             </button>
             <button
               onClick={() => setViewMode("calendar")}
-              className={`px-4 py-3 flex items-center gap-2 transition-colors ${viewMode === "calendar" ? "bg-blue-50 text-blue-600" : "text-slate-600 hover:bg-slate-50"}`}
+              className={`px-4 py-3 flex items-center gap-2 transition-colors ${viewMode === "calendar" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"}`}
             >
               <CalendarDays size={20} />
             </button>
@@ -173,24 +179,24 @@ function EventListView({
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               className={`px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all ${showFavoritesOnly
                 ? "bg-pink-100 text-pink-600 border border-pink-200"
-                : "bg-white text-slate-600 border border-slate-200 hover:border-pink-200 hover:text-pink-600"
+                : "bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] hover:border-pink-200 hover:text-pink-600"
                 }`}
             >
               <Heart size={16} fill={showFavoritesOnly ? "currentColor" : "none"} />
-              Favorites
+              {t("eventList.favorites")}
             </button>
           )}
 
           {/* Advanced Filters Toggle */}
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all ${showAdvancedFilters || Object.values(filters).some(v => v)
-              ? "bg-blue-100 text-blue-600 border border-blue-200"
-              : "bg-white text-slate-600 border border-slate-200 hover:border-blue-200 hover:text-blue-600"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all shrink-0 font-medium ${showAdvancedFilters
+              ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+              : "bg-[var(--card)] border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--accent)] hover:text-[var(--foreground)] shadow-sm"
               }`}
           >
-            <Filter size={16} />
-            Advanced Filters
+            <Filter size={18} />
+            <span className="hidden sm:inline">{t("eventList.advancedFilters")}</span>
             {Object.values(filters).filter(v => v).length > 0 && (
               <span className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {Object.values(filters).filter(v => v).length}
@@ -201,73 +207,100 @@ function EventListView({
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] transition-colors"
             >
-              Clear all
+              {t("eventList.clearAll")}
             </button>
           )}
         </div>
 
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Faculty</label>
+          <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-6 shadow-lg shadow-blue-500/5 animate-in slide-in-from-top-2">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-[var(--foreground)] flex items-center gap-2">
+                <Filter size={20} className="text-blue-500" />
+                {t("eventList.advancedFilters")}
+              </h3>
+              <button
+                onClick={() => {
+                  setFilters({});
+                  setSelectedCategory("All Categories");
+                }}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+              >
+                {t("eventList.clearAll")}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.faculty")}
+                </label>
                 <input
                   type="text"
-                  placeholder="Filter by faculty..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="e.g. Engineering"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)] placeholder-[var(--muted-foreground)]"
                   value={filters.faculty || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, faculty: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, faculty: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.department")}
+                </label>
                 <input
                   type="text"
-                  placeholder="Filter by department..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="e.g. Computer Science"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)] placeholder-[var(--muted-foreground)]"
                   value={filters.department || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, department: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, department: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.location")}
+                </label>
                 <input
                   type="text"
-                  placeholder="Filter by location..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="e.g. Room EC105"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)] placeholder-[var(--muted-foreground)]"
                   value={filters.location || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, location: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Organizer</label>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.organizer")}
+                </label>
                 <input
                   type="text"
-                  placeholder="Filter by organizer..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  placeholder="e.g. Jane Doe"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)] placeholder-[var(--muted-foreground)]"
                   value={filters.organizer || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, organizer: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, organizer: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">From Date</label>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.fromDate")}
+                </label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)]"
                   value={filters.startDate || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">To Date</label>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                  {t("eventList.toDate")}
+                </label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-[var(--foreground)]"
                   value={filters.endDate || ""}
-                  onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                  onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
                 />
               </div>
             </div>
@@ -277,207 +310,239 @@ function EventListView({
 
       {/* Results */}
       {filteredEvents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-            <Search size={40} className="text-slate-300" />
+        <div className="text-center py-16 bg-[var(--card)] rounded-2xl border border-dashed border-[var(--border)] animate-in fade-in zoom-in-95 duration-500">
+          <div className="w-16 h-16 bg-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="h-8 w-8 text-[var(--muted-foreground)]" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">No events found</h3>
-          <p className="text-slate-500 max-w-sm">
-            We couldn't find any events matching your criteria. Try adjusting your filters.
+          <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">{t("eventList.noEventsTitle")}</h3>
+          <p className="text-[var(--muted-foreground)] max-w-md mx-auto mb-6">
+            {t("eventList.noEventsDesc")}
           </p>
           <button
             onClick={clearAllFilters}
             className="mt-6 text-blue-600 font-semibold hover:text-blue-700 cursor-pointer"
           >
-            Clear all filters
+            {t("eventList.clearFilters")}
           </button>
         </div>
       ) : viewMode === "calendar" ? (
-        /* Calendar View */
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-slate-900">
-              {calendarDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
-            </h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1))}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={() => setCalendarDate(new Date())}
-                className="px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1))}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-slate-500 py-2">
-                {day}
-              </div>
-            ))}
-            {getDaysInMonth(calendarDate).map((day, index) => {
-              const dayEvents = day ? getEventsForDate(day) : [];
-              const isToday = day?.toDateString() === new Date().toDateString();
-
-              return (
-                <div
-                  key={index}
-                  className={`min-h-[100px] p-1 border border-slate-100 rounded-lg ${day ? "bg-white" : "bg-slate-50"
-                    } ${isToday ? "ring-2 ring-blue-500" : ""}`}
-                >
-                  {day && (
-                    <>
-                      <div className={`text-sm font-medium mb-1 ${isToday ? "text-blue-600" : "text-slate-700"}`}>
-                        {day.getDate()}
-                      </div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map(event => (
-                          <button
-                            key={event.id}
-                            onClick={() => onEventClick(event.id)}
-                            className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${getCategoryStyles(event.category).bg} ${getCategoryStyles(event.category).text}`}
-                          >
-                            {event.title}
-                          </button>
-                        ))}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-slate-500 pl-1">+{dayEvents.length - 2} more</div>
-                        )}
-                      </div>
-                    </>
+        <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-xl animate-in fade-in zoom-in-95 duration-500">
+          <div className="grid grid-cols-1 lg:grid-cols-7 divide-y lg:divide-y-0 lg:divide-x divide-[var(--border)]">
+            {/* Sidebar List */}
+            <div className="lg:col-span-2 bg-[var(--muted)] p-4 max-h-[600px] overflow-y-auto">
+              <h3 className="font-bold text-[var(--foreground)] mb-4 flex items-center gap-2 sticky top-0 bg-[var(--muted)] py-2 z-10">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                {t("eventList.today")}, {new Date().toLocaleDateString('default', { month: 'long', day: 'numeric' })}
+              </h3>
+              <div className="space-y-3">
+                {filteredEvents
+                  .filter(e => new Date(e.date).getDate() === new Date().getDate())
+                  .length === 0 && (
+                    <div className="text-center py-8 text-[var(--muted-foreground)]">
+                      <p>{t("eventList.noEventsDesc")}</p>
+                    </div>
                   )}
+
+                {filteredEvents
+                  .filter(e => new Date(e.date).getDate() === new Date().getDate())
+                  .map(event => (
+                    <div key={event.id} onClick={() => onEventClick(event.id)} className="bg-[var(--card)] p-3 rounded-xl border border-[var(--border)] shadow-sm hover:shadow-md cursor-pointer group transition-all">
+                      <div className="flex items-start justify-between mb-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${getCategoryStyles(event.category).bg} ${getCategoryStyles(event.category).text}`}>
+                          {event.time}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-[var(--foreground)] line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm mb-1">{event.title}</h4>
+                      <div className="flex items-center text-xs text-[var(--muted-foreground)]">
+                        <MapPin size={10} className="mr-1" />
+                        {event.location}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="lg:col-span-5 p-6 bg-[var(--card)]">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-[var(--foreground)]">
+                  {calendarDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1))}
+                    className="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors text-[var(--foreground)]"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={() => setCalendarDate(new Date())}
+                    className="px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  >
+                    {t("eventList.today")}
+                  </button>
+                  <button
+                    onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1))}
+                    className="p-2 hover:bg-[var(--accent)] rounded-lg transition-colors text-[var(--foreground)]"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
-              );
-            })}
+              </div>
+
+              <div className="grid grid-cols-7 gap-2 mb-4 text-center">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                  <div key={day} className="text-sm font-bold text-[var(--muted-foreground)] uppercase">{day}</div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {getDaysInMonth(calendarDate).map((day, index) => {
+                  const dayEvents = day ? getEventsForDate(day) : [];
+                  const isToday = day?.toDateString() === new Date().toDateString();
+
+                  return (
+                    <div
+                      key={index}
+                      className={`
+                        min-h-[100px] p-1 border rounded-xl flex flex-col
+                        ${day ? "bg-[var(--card)]" : "bg-[var(--muted)]"}
+                        ${isToday ? "ring-2 ring-blue-500 border-blue-500" : "border-[var(--border)]"}
+                      `}
+                    >
+                      {day && (
+                        <>
+                          <div className={`text-sm font-medium mb-1 ${isToday ? "text-blue-600" : "text-[var(--foreground)]"}`}>
+                            {day.getDate()}
+                          </div>
+                          <div className="space-y-1">
+                            {dayEvents.slice(0, 2).map(event => (
+                              <button
+                                key={event.id}
+                                onClick={() => onEventClick(event.id)}
+                                className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${getCategoryStyles(event.category).bg} ${getCategoryStyles(event.category).text}`}
+                              >
+                                {event.title}
+                              </button>
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <div className="text-xs text-[var(--muted-foreground)] pl-1">{t("eventList.moreEvents", { count: dayEvents.length - 2 })}</div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         /* Grid View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event: Event) => (
-            <div
-              key={event.id}
-              onClick={() => onEventClick(event.id)}
-              className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer h-full"
-            >
-              <div className="h-48 relative overflow-hidden group-hover:opacity-90 transition-opacity bg-slate-100">
-                {event.titleImage ? (
-                  <img
-                    src={getImageUrl(event.titleImage) || ""}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryStyles(event.category).gradient}`}></div>
-                )}
-
-                {/* Category Badge */}
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 uppercase tracking-wide shadow-sm z-10">
-                  {event.category}
-                </div>
-
-                {/* Favorite Button */}
-                {currentUser && !["organizer", "admin"].includes(currentUser.role) && (
-                  <button
-                    onClick={(e) => handleFavoriteClick(e, event.id)}
-                    className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-md transition-all z-10 ${event.isFavorited
-                      ? "bg-pink-500 text-white"
-                      : "bg-white/80 text-slate-400 hover:text-pink-500"
-                      }`}
-                  >
-                    <Heart size={16} fill={event.isFavorited ? "currentColor" : "none"} />
-                  </button>
-                )}
-
-                {/* Rating Badge */}
-                {event.averageRating && event.averageRating > 0 && (
-                  <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm z-10">
-                    <Star size={12} className="text-amber-500" fill="currentColor" />
-                    <span className="text-xs font-bold text-slate-700">{event.averageRating.toFixed(1)}</span>
-                    <span className="text-xs text-slate-500">({event.reviewCount})</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="font-bold text-xl text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-3">
-                  {event.title}
-                </h3>
-
-                <div className="space-y-2.5 text-sm text-slate-500 mb-4 flex-1">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                      <Calendar size={16} />
-                    </div>
-                    <span className="font-medium text-slate-700">
-                      {new Date(event.date).toLocaleDateString(undefined, {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}{" "}
-                      • {event.time}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                      <MapPin size={16} />
-                    </div>
-                    <span className="truncate">{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                      <Users size={16} />
-                    </div>
-                    <span>
-                      {event.attendees} / {event.capacity} attendees
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-slate-100">
-                  {currentUser && ["organizer", "admin"].includes(currentUser.role) ? (
-                    <div className="w-full py-3 rounded-xl text-sm font-medium text-slate-400 text-center bg-slate-50 border border-slate-100">
-                      Registration Unavailable
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredEvents.map((event, index) => {
+            const categoryStyles = getCategoryStyles(event.category);
+            return (
+              <div
+                key={event.id}
+                onClick={() => onEventClick(event.id)}
+                className="group bg-[var(--card)] rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer h-full animate-in fade-in zoom-in-95"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Image & Overlays */}
+                <div className="relative h-48 overflow-hidden bg-[var(--muted)]">
+                  {event.titleImage ? (
+                    <img
+                      src={getImageUrl(event.titleImage) || ""}
+                      alt={event.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${categoryStyles.gradient}`}></div>
+                  )}
+
+                  {/* Category Badge */}
+                  <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm z-10 backdrop-blur-md ${categoryStyles.bg} ${categoryStyles.text} border border-white/20`}>
+                    {event.category}
+                  </div>
+
+                  {/* Favorite Button */}
+                  {currentUser && !["organizer", "admin"].includes(currentUser.role) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleRegistration(event.id);
+                        toggleFavorite(event.id);
                       }}
-                      className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${event.isRegistered
-                        ? "bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30"
+                      className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-md transition-all z-10 ${event.isFavorited
+                        ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30"
+                        : "bg-white/90 dark:bg-slate-950/90 text-slate-700 dark:text-slate-300 border border-transparent hover:border-pink-200 dark:hover:border-pink-900 hover:text-pink-500 hover:bg-white dark:hover:bg-slate-900 shadow-sm"
                         }`}
                     >
-                      {event.isRegistered ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                          <span>Registered</span>
-                        </>
-                      ) : (
-                        "Register Now"
-                      )}
+                      <Heart size={16} fill={event.isFavorited ? "currentColor" : "none"} />
                     </button>
                   )}
                 </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="font-bold text-lg text-[var(--foreground)] leading-tight mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                    {event.title}
+                  </h3>
+
+                  <div className="space-y-2 mb-4 flex-1">
+                    <div className="flex items-center text-sm text-[var(--muted-foreground)]">
+                      <Calendar size={14} className="mr-2 shrink-0 opacity-70" />
+                      <span className="truncate">
+                        {new Date(event.date).toLocaleDateString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        • {event.time}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-sm text-[var(--muted-foreground)]">
+                      <MapPin size={14} className="mr-2 shrink-0 opacity-70" />
+                      <span className="truncate">{event.location}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-[var(--muted-foreground)]">
+                      <Users size={14} className="mr-2 shrink-0 opacity-70" />
+                      <span>{t("eventList.attendees", { count: event.attendees || 0, capacity: event.capacity })}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-[var(--border)]">
+                    {currentUser && ["organizer", "admin"].includes(currentUser.role) ? (
+                      <div className="w-full py-2.5 rounded-xl text-sm font-medium text-[var(--muted-foreground)] text-center bg-[var(--muted)] border border-[var(--border)]">
+                        {t("eventList.registrationUnavailable")}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRegistration(event.id);
+                        }}
+                        className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${event.isRegistered
+                          ? "bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-600/20"
+                          : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30"
+                          }`}
+                      >
+                        {event.isRegistered ? (
+                          <>
+                            <Check size={16} />
+                            <span>{t("eventList.registered")}</span>
+                          </>
+                        ) : (
+                          t("eventList.registerNow")
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

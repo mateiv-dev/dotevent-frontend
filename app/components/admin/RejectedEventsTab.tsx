@@ -13,11 +13,13 @@ import {
 } from "lucide-react";
 import { getCategoryStyles } from "../../utils/categoryStyles";
 import { getImageUrl } from "../../utils/imageUtils";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function RejectedEventsTab() {
   const [events, setEvents] = useState<RejectedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   const fetchEvents = async () => {
     try {
@@ -30,7 +32,7 @@ export default function RejectedEventsTab() {
       const message =
         err instanceof APIError
           ? err.getUserFriendlyMessage()
-          : "Failed to load rejected events";
+          : t("common.error");
       setError(message);
     } finally {
       setLoading(false);
@@ -59,7 +61,7 @@ export default function RejectedEventsTab() {
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <RefreshCw size={16} />
-          Try Again
+          {t("admin.rejected.tryAgain")}
         </button>
       </div>
     );
@@ -67,9 +69,9 @@ export default function RejectedEventsTab() {
 
   if (events.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-500">
-        <XCircle className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-        <p>No rejected events</p>
+      <div className="text-center py-12 text-[var(--muted-foreground)]">
+        <XCircle className="w-12 h-12 mx-auto mb-4 text-[var(--muted)]" />
+        <p>{t("admin.rejected.noRejected")}</p>
       </div>
     );
   }
@@ -81,19 +83,19 @@ export default function RejectedEventsTab() {
         const organizerName =
           event.organizer?.organizationName ||
           event.organizer?.represents ||
-          "Unknown";
+          t("admin.pending.unknown");
 
         return (
           <div
             key={event.id || index}
-            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+            className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm"
           >
             <div className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`} />
             <div className="p-5">
               <div className="flex items-start gap-4">
                 {/* Image */}
                 {event.titleImage && (
-                  <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                  <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-[var(--muted)] border border-[var(--border)]">
                     <img
                       src={getImageUrl(event.titleImage) || ""}
                       alt={event.title}
@@ -104,19 +106,19 @@ export default function RejectedEventsTab() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-lg text-slate-900">
+                    <h3 className="font-semibold text-lg text-[var(--foreground)]">
                       {event.title}
                     </h3>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                       <XCircle size={12} />
-                      Rejected
+                      {t("organizationEvents.rejected")}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-3">
+                  <div className="flex flex-wrap gap-4 text-sm text-[var(--muted-foreground)] mb-3">
                     <span className="flex items-center gap-1">
                       <Calendar size={14} />
-                      {new Date(event.date).toLocaleDateString()} at {event.time}
+                      {new Date(event.date).toLocaleDateString()} • {event.time}
                     </span>
                     <span className="flex items-center gap-1">
                       <MapPin size={14} />
@@ -124,27 +126,27 @@ export default function RejectedEventsTab() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Users size={14} />
-                      Capacity: {event.capacity}
+                      {t("admin.pending.capacity")}: {event.capacity}
                     </span>
                   </div>
 
-                  <p className="text-sm text-slate-500 line-clamp-2 mb-3">
+                  <p className="text-sm text-[var(--muted-foreground)] line-clamp-2 mb-3">
                     {event.description}
                   </p>
 
                   {/* Rejection Reason */}
                   {event.rejectionReason && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <AlertCircle
                           size={16}
-                          className="text-red-500 mt-0.5 shrink-0"
+                          className="text-red-500 shrink-0 mt-0.5"
                         />
                         <div>
-                          <p className="text-sm font-medium text-red-700">
-                            Rejection Reason:
+                          <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                            {t("myRequests.rejectionReason")}
                           </p>
-                          <p className="text-sm text-red-600">
+                          <p className="text-sm text-red-600 dark:text-red-400">
                             {event.rejectionReason}
                           </p>
                         </div>
@@ -158,12 +160,12 @@ export default function RejectedEventsTab() {
                     >
                       {event.category}
                     </span>
-                    <span className="text-xs text-slate-400">
-                      by {organizerName}
+                    <span className="text-xs text-[var(--muted-foreground)]">
+                      {t("admin.rejected.by")} {organizerName}
                     </span>
                     {event.author && (
-                      <span className="text-xs text-slate-400">
-                        • Created by {event.author.name}
+                      <span className="text-xs text-[var(--muted-foreground)]">
+                        • {t("organizationEvents.createdBy")} {event.author.name}
                       </span>
                     )}
                   </div>

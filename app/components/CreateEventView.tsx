@@ -20,6 +20,7 @@ import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { TextArea } from "./ui/TextArea";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface CreateEventViewProps {
   onCreate: (event: any, files: File[]) => Promise<boolean>;
@@ -43,6 +44,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     faculty: "",
     department: "",
   });
+  const { t } = useTranslation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -51,7 +53,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
     );
 
     if (files.length + imageFiles.length > 10) {
-      setError("You can upload a maximum of 10 images");
+      setError(t("createEvent.images.errorTooMany"));
       return;
     }
 
@@ -59,7 +61,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
       (file) => file.size > 5 * 1024 * 1024
     );
     if (oversizedFiles.length > 0) {
-      setError("Some files are too large. Maximum size is 5MB per file.");
+      setError(t("createEvent.images.errorTooBig"));
       return;
     }
 
@@ -100,25 +102,25 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-        <div className="bg-slate-50/50 p-8 border-b border-slate-100">
-          <h2 className="text-2xl font-bold text-slate-900">
-            Create New Event
+      <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-xl shadow-slate-200/50 overflow-hidden dark:shadow-none">
+        <div className="bg-[var(--muted)] p-8 border-b border-[var(--border)]">
+          <h2 className="text-2xl font-bold text-[var(--foreground)]">
+            {t("createEvent.title")}
           </h2>
-          <p className="text-slate-500 mt-1">
-            Fill in the details to publish an event to the student portal.
+          <p className="text-[var(--muted-foreground)] mt-1">
+            {t("createEvent.subtitle")}
           </p>
           <p className="text-amber-600 text-sm mt-2">
-            Note: Events require admin approval before they become visible.
+            {t("createEvent.approvalNote")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
           <div className="space-y-6">
             <Input
-              label="Event Title"
+              label={t("createEvent.fields.title")}
               required
-              placeholder="e.g., Annual Science Fair"
+              placeholder={t("createEvent.placeholders.title")}
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
@@ -129,7 +131,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Date"
+                label={t("createEvent.fields.date")}
                 required
                 type="date"
                 leftIcon={<Calendar size={16} />}
@@ -141,7 +143,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 disabled={isSubmitting}
               />
               <Input
-                label="Time"
+                label={t("createEvent.fields.time")}
                 required
                 type="time"
                 leftIcon={<Clock size={16} />}
@@ -156,9 +158,9 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Location"
+                label={t("createEvent.fields.location")}
                 required
-                placeholder="Room number or Building"
+                placeholder={t("createEvent.placeholders.location")}
                 leftIcon={<MapPin size={16} />}
                 value={formData.location}
                 onChange={(e) =>
@@ -167,7 +169,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 disabled={isSubmitting}
               />
               <Select
-                label="Category"
+                label={t("createEvent.fields.category")}
                 leftIcon={<Tag size={16} />}
                 value={formData.category}
                 onChange={(e) =>
@@ -184,7 +186,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Capacity"
+                label={t("createEvent.fields.capacity")}
                 required
                 type="number"
                 min="1"
@@ -199,9 +201,9 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 disabled={isSubmitting}
               />
               <Input
-                label="Contact Info"
+                label={t("createEvent.fields.contact")}
                 required
-                placeholder="Email or Phone Number"
+                placeholder={t("createEvent.placeholders.contact")}
                 leftIcon={<User size={16} />}
                 value={formData.contact}
                 onChange={(e) =>
@@ -214,8 +216,8 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
             {/* Faculty & Department - Optional fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Faculty (Optional)"
-                placeholder="e.g., Faculty of Engineering"
+                label={t("createEvent.fields.faculty")}
+                placeholder={t("createEvent.placeholders.faculty")}
                 leftIcon={<Building size={16} />}
                 value={formData.faculty}
                 onChange={(e) =>
@@ -224,8 +226,8 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                 disabled={isSubmitting}
               />
               <Input
-                label="Department (Optional)"
-                placeholder="e.g., Computer Science"
+                label={t("createEvent.fields.department")}
+                placeholder={t("createEvent.placeholders.department")}
                 leftIcon={<GraduationCap size={16} />}
                 value={formData.department}
                 onChange={(e) =>
@@ -236,9 +238,9 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
             </div>
 
             <TextArea
-              label="Description"
+              label={t("createEvent.fields.description")}
               rows={4}
-              placeholder="What is this event about?"
+              placeholder={t("createEvent.placeholders.description")}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -248,8 +250,8 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
 
             {/* File upload section */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Event Images (Optional)
+              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                {t("createEvent.images.label")}
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -265,15 +267,15 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                   <label
                     htmlFor="file-upload"
                     className={`flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${files.length >= 10
-                      ? "border-slate-200 bg-slate-50 cursor-not-allowed"
-                      : "border-slate-300 hover:border-blue-500 hover:bg-blue-50"
+                      ? "border-[var(--border)] bg-[var(--muted)] cursor-not-allowed"
+                      : "border-[var(--muted-foreground)]/30 hover:border-blue-500 hover:bg-blue-50/50"
                       }`}
                   >
-                    <Upload size={20} className="text-slate-400" />
-                    <span className="text-sm text-slate-600">
+                    <Upload size={20} className="text-[var(--muted-foreground)]" />
+                    <span className="text-sm text-[var(--muted-foreground)]">
                       {files.length >= 10
-                        ? "Maximum 10 images reached"
-                        : "Click to upload images (max 10, 5MB each)"}
+                        ? t("createEvent.images.maxReached")
+                        : t("createEvent.images.uploadPrompt")}
                     </span>
                   </label>
                 </div>
@@ -284,7 +286,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                     {filePreviews.map((preview, index) => (
                       <div
                         key={index}
-                        className="relative group rounded-lg overflow-hidden border border-slate-200"
+                        className="relative group rounded-lg overflow-hidden border border-[var(--border)]"
                       >
                         <img
                           src={preview}
@@ -308,28 +310,28 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
                   </div>
                 )}
 
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--muted-foreground)]">
                   <ImageIcon size={12} className="inline mr-1" />
-                  Supported formats: JPG, PNG, GIF, WebP
+                  {t("createEvent.images.supportedFormats")}
                 </p>
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-4 pt-6 border-t border-[var(--border)]">
             <Button
               type="button"
               variant="ghost"
               onClick={onCancel}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("createEvent.buttons.cancel")}
             </Button>
             <Button
               type="submit"
@@ -343,7 +345,7 @@ function CreateEventView({ onCreate, onCancel }: CreateEventViewProps) {
               }
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Publish Event"}
+              {isSubmitting ? t("createEvent.buttons.creating") : t("createEvent.buttons.publish")}
             </Button>
           </div>
         </form>

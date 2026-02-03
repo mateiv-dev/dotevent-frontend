@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "./ui/Button";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface ParticipantsModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export default function ParticipantsModal({
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [exporting, setExporting] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen && eventId) {
@@ -51,7 +53,7 @@ export default function ParticipantsModal({
       const message =
         err instanceof APIError
           ? err.getUserFriendlyMessage()
-          : "Failed to load participants";
+          : t("participantsModal.loading");
       setError(message);
     } finally {
       setLoading(false);
@@ -100,41 +102,41 @@ export default function ParticipantsModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-[var(--border)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-xl">
-                <Users size={20} className="text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                <Users size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  Event Participants
+                <h2 className="text-xl font-bold text-[var(--foreground)]">
+                  {t("participantsModal.title")}
                 </h2>
-                <p className="text-sm text-slate-500 line-clamp-1">
+                <p className="text-sm text-[var(--muted-foreground)] line-clamp-1">
                   {eventTitle}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+              className="p-2 hover:bg-[var(--accent)] rounded-xl transition-colors"
             >
-              <X size={20} className="text-slate-500" />
+              <X size={20} className="text-[var(--muted-foreground)]" />
             </button>
           </div>
 
           {/* Stats Bar */}
           {!loading && !error && (
-            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-slate-100">
+            <div className="flex items-center gap-6 mt-4 pt-4 border-t border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <Users size={16} className="text-slate-400" />
-                <span className="text-sm text-slate-600">
-                  <span className="font-semibold text-slate-900">
+                <Users size={16} className="text-[var(--muted-foreground)]" />
+                <span className="text-sm text-[var(--muted-foreground)]">
+                  <span className="font-semibold text-[var(--foreground)]">
                     {participants.length}
                   </span>{" "}
-                  registered
+                  {t("participantsModal.registered")}
                 </span>
               </div>
               <div className="ml-auto">
@@ -145,7 +147,7 @@ export default function ParticipantsModal({
                   isLoading={exporting}
                   leftIcon={<Download size={14} />}
                 >
-                  Export CSV
+                  {t("participantsModal.exportCSV")}
                 </Button>
               </div>
             </div>
@@ -154,18 +156,18 @@ export default function ParticipantsModal({
 
         {/* Search */}
         {!loading && !error && participants.length > 0 && (
-          <div className="px-6 py-3 border-b border-slate-100">
+          <div className="px-6 py-3 border-b border-[var(--border)]">
             <div className="relative">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
               />
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder={t("participantsModal.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
             </div>
           </div>
@@ -185,21 +187,21 @@ export default function ParticipantsModal({
                 onClick={fetchParticipants}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
-                Try Again
+                {t("participantsModal.tryAgain")}
               </button>
             </div>
           ) : participants.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-              <p className="text-slate-500 font-medium">
-                No participants registered yet
+              <Users className="w-12 h-12 mx-auto mb-4 text-[var(--muted-foreground)] opacity-50" />
+              <p className="text-[var(--muted-foreground)] font-medium">
+                {t("participantsModal.noParticipants")}
               </p>
             </div>
           ) : filteredParticipants.length === 0 ? (
             <div className="text-center py-12">
-              <Search className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-              <p className="text-slate-500 font-medium">
-                No participants match your search
+              <Search className="w-12 h-12 mx-auto mb-4 text-[var(--muted-foreground)] opacity-50" />
+              <p className="text-[var(--muted-foreground)] font-medium">
+                {t("participantsModal.noMatches")}
               </p>
             </div>
           ) : (
@@ -207,26 +209,26 @@ export default function ParticipantsModal({
               {filteredParticipants.map((participant, index) => (
                 <div
                   key={`${participant.email}-${index}`}
-                  className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-4 p-4 bg-[var(--muted)] rounded-xl hover:bg-[var(--accent)] transition-colors"
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {participant.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 truncate">
+                    <p className="font-medium text-[var(--foreground)] truncate">
                       {participant.name}
                     </p>
-                    <p className="text-sm text-slate-500 truncate">
+                    <p className="text-sm text-[var(--muted-foreground)] truncate">
                       {participant.email}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     {participant.registeredAt && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-[var(--muted-foreground)]">
                         {new Date(participant.registeredAt).toLocaleDateString()}
                       </span>
                     )}
-                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                       {participant.role}
                     </span>
                   </div>

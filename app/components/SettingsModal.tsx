@@ -25,6 +25,7 @@ import { Checkbox } from "./ui/Checkbox";
 import RoleRequestModal from "./RoleRequestModal";
 import { formatRole } from "../utils/formatters";
 import { apiClient, APIError, UserReview } from "../../lib/apiClient";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ type Tab = "profile" | "notifications" | "appearance" | "reviews" | "account";
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { currentUser, updateUser, settings, updateSettings } = useApp();
   const { signOut, deleteAccount } = useAuth();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -124,11 +126,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
 
   const tabs = [
-    { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "reviews", label: "My Reviews", icon: Star },
-    { id: "account", label: "Account", icon: Shield },
+    { id: "profile", label: t("settings.profile"), icon: User },
+    { id: "notifications", label: t("settings.notifications"), icon: Bell },
+    { id: "appearance", label: t("settings.appearance"), icon: Palette },
+    { id: "reviews", label: t("settings.reviews"), icon: Star },
+    { id: "account", label: t("settings.account"), icon: Shield },
   ].filter(tab => {
     if (tab.id === "notifications" && currentUser?.role === "admin") return false;
     if (tab.id === "reviews" && (currentUser?.role === "admin" || currentUser?.role === "organizer")) return false;
@@ -141,30 +143,30 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[calc(95vh-6rem)] lg:max-h-[90vh] mb-16 lg:mb-0 animate-in zoom-in-95 duration-200"
+        className="bg-[var(--card)] rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[calc(95vh-6rem)] lg:max-h-[90vh] mb-16 lg:mb-0 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
-          <h2 className="text-lg sm:text-lg font-semibold text-slate-900">
-            Settings
+        <div className="p-4 sm:p-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--muted)]/50 shrink-0">
+          <h2 className="text-lg sm:text-lg font-semibold text-[var(--foreground)]">
+            {t("settings.title")}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--accent)] rounded-full transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="flex sm:flex-row flex-col flex-1 overflow-hidden min-h-0">
-          <div className="w-48 bg-slate-50 border-r border-slate-100 p-3 space-y-1 hidden sm:block shrink-0">
+          <div className="w-48 bg-[var(--muted)] border-r border-[var(--border)] p-3 space-y-1 hidden sm:block shrink-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-[var(--card)] text-blue-600 shadow-sm"
+                  : "text-[var(--muted-foreground)] hover:bg-[var(--card)] hover:text-[var(--foreground)]"
                   }`}
               >
                 <tab.icon size={18} />
@@ -180,7 +182,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
                   ? "bg-blue-600 text-white"
-                  : "text-slate-600 bg-slate-100"
+                  : "text-[var(--muted-foreground)] bg-[var(--muted)]"
                   }`}
               >
                 <tab.icon size={18} />
@@ -193,21 +195,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "profile" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Personal Information
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.personalInfo")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Manage your personal details.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.personalInfoDesc")}
                   </p>
 
                   <div className="space-y-3 sm:space-y-4">
                     <Input
-                      label="Full Name"
+                      label={t("settings.personalInfo")}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />
                     <Input
-                      label="Email Address"
+                      label={t("settings.email")}
                       type="email"
                       leftIcon={<Mail size={16} />}
                       value={email}
@@ -217,11 +219,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </div>
 
                 <div className="pt-4 sm:pt-6 border-t border-slate-100">
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Role Information
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.roleInfo")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Your current role:{" "}
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.currentRole")}{" "}
                     <span className="font-medium capitalize">
                       {formatRole(currentUser.role)}
                     </span>
@@ -230,7 +232,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {/* Student University Input */}
                   {currentUser.role === "student" && (
                     <Input
-                      label="University / Department"
+                      label={t("settings.university")}
                       leftIcon={<Building size={16} />}
                       value={university}
                       onChange={(e) => setUniversity(e.target.value)}
@@ -242,14 +244,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {currentUser.role === "student_rep" && (
                     <>
                       <Input
-                        label="University"
+                        label={t("settings.university")}
                         leftIcon={<Building size={16} />}
                         value={university}
                         onChange={(e) => setUniversity(e.target.value)}
                         containerClassName="mb-4"
                       />
                       <Input
-                        label="Represents (Faculty/Dorm/Organization)"
+                        label={t("settings.represents")}
                         leftIcon={<Building size={16} />}
                         value={represents}
                         onChange={(e) => setRepresents(e.target.value)}
@@ -261,7 +263,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {/* Organizer Input */}
                   {currentUser.role === "organizer" && (
                     <Input
-                      label="Organization"
+                      label={t("settings.organization")}
                       leftIcon={<Building size={16} />}
                       value={organizationName}
                       onChange={(e) => setOrganizationName(e.target.value)}
@@ -278,7 +280,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         leftIcon={<ArrowUpCircle size={18} />}
                         className="w-full"
                       >
-                        Request Role Upgrade
+                        {t("settings.requestUpgrade")}
                       </Button>
                     )}
                 </div>
@@ -294,16 +296,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "notifications" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Event Reminders
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.eventReminders")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Choose when you want to be notified about upcoming events.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.eventRemindersDesc")}
                   </p>
 
                   <div className="space-y-2.5 sm:space-y-3">
                     <div
-                      className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3.5 sm:p-3 border border-[var(--border)] rounded-xl hover:bg-[var(--muted)]/50 transition-colors cursor-pointer"
                       onClick={() =>
                         updateSettings({
                           notifications: {
@@ -313,8 +315,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         })
                       }
                     >
-                      <span className="text-sm sm:text-sm font-medium text-slate-700">
-                        24 hours before
+                      <span className="text-sm sm:text-sm font-medium text-[var(--foreground)]">
+                        {t("settings.reminder24h")}
                       </span>
                       <Checkbox
                         checked={settings.notifications.reminder24h}
@@ -323,7 +325,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       />
                     </div>
                     <div
-                      className="flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3.5 sm:p-3 border border-[var(--border)] rounded-xl hover:bg-[var(--muted)]/50 transition-colors cursor-pointer"
                       onClick={() =>
                         updateSettings({
                           notifications: {
@@ -333,8 +335,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         })
                       }
                     >
-                      <span className="text-sm sm:text-sm font-medium text-slate-700">
-                        Event updates
+                      <span className="text-sm sm:text-sm font-medium text-[var(--foreground)]">
+                        {t("settings.eventUpdates")}
                       </span>
                       <Checkbox
                         checked={settings.notifications.eventUpdates}
@@ -350,11 +352,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "appearance" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Theme
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.theme")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Customize the look and feel of the application.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.themeDesc")}
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -368,18 +370,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         })
                       }
                       className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === "light"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 hover:border-slate-300"
+                        ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20"
+                        : "border-[var(--border)] hover:border-[var(--muted-foreground)]"
                         }`}
                     >
                       <div className="w-full h-20 sm:h-20 bg-white border border-slate-200 rounded-lg shadow-sm"></div>
                       <span
                         className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === "light"
                           ? "text-blue-700"
-                          : "text-slate-600"
+                          : "text-[var(--muted-foreground)]"
                           }`}
                       >
-                        Light
+                        {t("settings.light")}
                       </span>
                     </button>
                     <button
@@ -389,29 +391,29 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         })
                       }
                       className={`p-3 sm:p-3 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${settings.appearance.theme === "dark"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 hover:border-slate-300"
+                        ? "border-blue-500 bg-[var(--muted)]"
+                        : "border-[var(--border)] hover:border-[var(--muted-foreground)]"
                         }`}
                     >
                       <div className="w-full h-20 sm:h-20 bg-slate-900 border border-slate-700 rounded-lg shadow-sm"></div>
                       <span
                         className={`text-sm sm:text-sm font-medium ${settings.appearance.theme === "dark"
                           ? "text-blue-700"
-                          : "text-slate-600"
+                          : "text-[var(--muted-foreground)]"
                           }`}
                       >
-                        Dark
+                        {t("settings.dark")}
                       </span>
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-4 sm:pt-6 border-t border-slate-100">
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Language
+                <div className="pt-4 sm:pt-6 border-t border-[var(--border)]">
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.language")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Select your preferred language.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.languageDesc")}
                   </p>
 
                   <Select
@@ -435,11 +437,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "reviews" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    My Reviews
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.myReviews")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    View feedback you&apos;ve given for events you attended.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.myReviewsDesc")}
                   </p>
                 </div>
 
@@ -449,10 +451,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                 ) : reviews.length === 0 ? (
                   <div className="text-center py-8">
-                    <Star className="mx-auto h-12 w-12 text-slate-300 mb-3" />
-                    <p className="text-slate-500">No reviews yet</p>
-                    <p className="text-sm text-slate-400 mt-1">
-                      Your reviews will appear here after you rate events
+                    <Star className="mx-auto h-12 w-12 text-[var(--muted-foreground)] mb-3 opacity-50" />
+                    <p className="text-[var(--muted-foreground)]">{t("settings.noReviews")}</p>
+                    <p className="text-sm text-[var(--muted-foreground)] mt-1 opacity-70">
+                      {t("settings.noReviewsDesc")}
                     </p>
                   </div>
                 ) : (
@@ -460,11 +462,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     {reviews.map((review) => (
                       <div
                         key={review.id}
-                        className="p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                        className="p-4 border border-[var(--border)] rounded-xl hover:bg-[var(--muted)]/50 transition-colors"
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-slate-900 line-clamp-1">
-                            {review.event.title}
+                          <h4 className="font-medium text-[var(--foreground)] line-clamp-1">
+                            {review.event?.title || "Deleted Event"}
                           </h4>
                           <div className="flex items-center gap-1 ml-2 shrink-0">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -474,18 +476,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 className={
                                   star <= review.rating
                                     ? "fill-yellow-400 text-yellow-400"
-                                    : "text-slate-300"
+                                    : "text-[var(--muted-foreground)] opacity-30"
                                 }
                               />
                             ))}
                           </div>
                         </div>
                         {review.comment && (
-                          <p className="text-sm text-slate-600 mb-2">
+                          <p className="text-sm text-[var(--foreground)] mb-2">
                             {review.comment}
                           </p>
                         )}
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[var(--muted-foreground)]">
                           {new Date(review.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -498,57 +500,57 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {activeTab === "account" && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Security
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.security")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Manage your password and account access.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.securityDesc")}
                   </p>
 
-                  <button className="w-full flex items-center justify-between p-3.5 sm:p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-left group">
+                  <button className="w-full flex items-center justify-between p-3.5 sm:p-3 border border-[var(--border)] rounded-xl hover:bg-[var(--muted)]/50 transition-colors text-left group">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
                         <Key size={18} />
                       </div>
                       <div>
-                        <p className="text-sm sm:text-sm font-medium text-slate-900">
-                          Change Password
+                        <p className="text-sm sm:text-sm font-medium text-[var(--foreground)]">
+                          {t("settings.changePassword")}
                         </p>
-                        <p className="text-xs sm:text-xs text-slate-500">
-                          Update your password regularly
+                        <p className="text-xs sm:text-xs text-[var(--muted-foreground)]">
+                          {t("settings.changePasswordDesc")}
                         </p>
                       </div>
                     </div>
                   </button>
                 </div>
 
-                <div className="pt-4 sm:pt-6 border-t border-slate-100">
-                  <h3 className="text-lg sm:text-lg font-medium text-slate-900 mb-1">
-                    Session
+                <div className="pt-4 sm:pt-6 border-t border-[var(--border)]">
+                  <h3 className="text-lg sm:text-lg font-medium text-[var(--foreground)] mb-1">
+                    {t("settings.session")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Sign out of your account.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.sessionDesc")}
                   </p>
 
                   <Button
                     variant="ghost"
-                    className="w-full justify-start bg-slate-100 hover:bg-slate-200 border-none shadow-none text-slate-700"
+                    className="w-full justify-start bg-[var(--muted)] hover:bg-[var(--muted)]/80 border-none shadow-none text-[var(--foreground)]"
                     leftIcon={<LogOut size={18} />}
                     onClick={() => {
                       signOut();
                       onClose();
                     }}
                   >
-                    Log Out
+                    {t("settings.logOut")}
                   </Button>
                 </div>
 
-                <div className="pt-4 sm:pt-6 border-t border-slate-100">
+                <div className="pt-4 sm:pt-6 border-t border-[var(--border)]">
                   <h3 className="text-lg sm:text-lg font-medium text-red-600 mb-1">
-                    Danger Zone
+                    {t("settings.dangerZone")}
                   </h3>
-                  <p className="text-sm sm:text-sm text-slate-500 mb-3 sm:mb-4">
-                    Irreversible actions for your account.
+                  <p className="text-sm sm:text-sm text-[var(--muted-foreground)] mb-3 sm:mb-4">
+                    {t("settings.dangerZoneDesc")}
                   </p>
 
                   <Button
@@ -558,7 +560,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     onClick={async () => {
                       if (
                         confirm(
-                          "Are you sure you want to delete your account? This action cannot be undone.",
+                          t("settings.deleteAccountConfirm")
                         )
                       ) {
                         await deleteAccount();
@@ -566,7 +568,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       }
                     }}
                   >
-                    Delete Account
+                    {t("settings.deleteAccount")}
                   </Button>
                 </div>
               </div>
@@ -574,7 +576,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
 
-        <div className="p-4 sm:p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
+        <div className="p-4 sm:p-4 border-t border-[var(--border)] bg-[var(--muted)]/50 shrink-0">
           {saveError && (
             <div className="mb-3 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm">
               {saveError}
@@ -582,7 +584,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
           <div className="flex justify-end gap-3 sm:gap-3">
             <Button variant="ghost" onClick={onClose} disabled={isSaving}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -594,7 +596,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 ) : undefined
               }
             >
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? t("common.loading") : t("common.save")}
             </Button>
           </div>
         </div>

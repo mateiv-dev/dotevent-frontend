@@ -6,6 +6,7 @@ import { TextArea } from "./ui/TextArea";
 import { Select } from "./ui/Select";
 import { apiClient } from "../../lib/apiClient";
 import { useApp } from "../context/AppContext";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface RoleRequestModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export default function RoleRequestModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen && currentUser && currentUser.role === "student" && requestedRole === "student_rep") {
@@ -74,7 +76,7 @@ export default function RoleRequestModal({
         onSuccess?.();
       }, 2000);
     } catch (err: any) {
-      setError(err.message || "Failed to submit request. Please try again.");
+      setError(err.message || t("common.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -83,10 +85,10 @@ export default function RoleRequestModal({
   if (success) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-green-600"
+              className="w-8 h-8 text-green-600 dark:text-green-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -99,11 +101,11 @@ export default function RoleRequestModal({
               />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">
-            Request Submitted!
+          <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">
+            {t("roleRequest.successTitle")}
           </h2>
-          <p className="text-slate-500">
-            Your role upgrade request has been submitted for review.
+          <p className="text-[var(--muted-foreground)]">
+            {t("roleRequest.successDesc")}
           </p>
         </div>
       </div>
@@ -112,49 +114,49 @@ export default function RoleRequestModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900">
-            Request Role Upgrade
+      <div className="bg-white dark:bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
+          <h2 className="text-xl font-bold text-[var(--foreground)]">
+            {t("roleRequest.title")}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--muted)] rounded-lg transition-colors"
           >
-            <X size={20} className="text-slate-500" />
+            <X size={20} className="text-[var(--muted-foreground)]" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <Select
-            label="Requested Role"
+            label={t("roleRequest.requestedRole")}
             leftIcon={<GraduationCap size={16} />}
             value={requestedRole}
             onChange={(e) => setRequestedRole(e.target.value as RequestedRole)}
           >
             {canRequestStudentRep && (
-              <option value="student_rep">Student Representative</option>
+              <option value="student_rep">{t("roleRequest.studentRep")}</option>
             )}
             {canRequestOrganizer && (
-              <option value="organizer">Event Organizer</option>
+              <option value="organizer">{t("roleRequest.organizer")}</option>
             )}
           </Select>
 
           {requestedRole === "student_rep" && (
             <>
               <Input
-                label="University"
+                label={t("settings.university")}
                 required
-                placeholder="e.g., Politehnica University of Bucharest"
+                placeholder={t("createEvent.placeholders.faculty")}
                 leftIcon={<Building size={16} />}
                 value={university}
                 onChange={(e) => setUniversity(e.target.value)}
                 disabled={isSubmitting}
               />
               <Input
-                label="Represents (Faculty/Dorm/Organization)"
+                label={t("settings.represents")}
                 required
-                placeholder="e.g., Faculty of Automatic Control and Computers"
+                placeholder={t("createEvent.placeholders.department")}
                 leftIcon={<Building size={16} />}
                 value={represents}
                 onChange={(e) => setRepresents(e.target.value)}
@@ -165,7 +167,7 @@ export default function RoleRequestModal({
 
           {requestedRole === "organizer" && (
             <Input
-              label="Organization Name"
+              label={t("roleRequest.organizationName")}
               required
               placeholder="e.g., Tech Club Bucharest"
               leftIcon={<Building size={16} />}
@@ -176,10 +178,10 @@ export default function RoleRequestModal({
           )}
 
           <TextArea
-            label="Description / Justification"
+            label={t("roleRequest.justification")}
             required
             rows={4}
-            placeholder="Tell us why you're requesting this role and how you plan to use it..."
+            placeholder={t("roleRequest.justificationPlaceholder")}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             disabled={isSubmitting}
@@ -191,14 +193,14 @@ export default function RoleRequestModal({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -212,7 +214,7 @@ export default function RoleRequestModal({
                 )
               }
             >
-              {isSubmitting ? "Submitting..." : "Submit Request"}
+              {isSubmitting ? t("roleRequest.submitting") : t("roleRequest.submit")}
             </Button>
           </div>
         </form>

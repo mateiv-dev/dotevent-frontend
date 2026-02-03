@@ -91,6 +91,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const { user: firebaseUser, loading: authLoading, signOut } = useAuth();
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedSettings = localStorage.getItem("userSettings");
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          setSettings((prev) => ({
+            ...prev,
+            ...parsed,
+            appearance: {
+              ...prev.appearance,
+              ...(parsed.appearance || {}),
+            },
+            notifications: {
+              ...prev.notifications,
+              ...(parsed.notifications || {}),
+            },
+          }));
+        } catch (e) {
+          console.error("Failed to parse user settings", e);
+        }
+      }
+    }
+  }, []);
+
   const fetchUserRegistrations = useCallback(async () => {
     if (!firebaseUser) {
       setRegisteredEventIds(new Set());
@@ -227,6 +252,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return () => clearInterval(interval);
   }, [firebaseUser, fetchNotifications]);
+
+  useEffect(() => {
+    if (settings.appearance.theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [settings.appearance.theme]);
 
   useEffect(() => {
     fetchEvents();
@@ -616,6 +649,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   }, []);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (settings.appearance.theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [settings.appearance.theme]);
 
   const value = useMemo(
     () => ({

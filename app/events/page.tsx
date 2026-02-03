@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
 import EventListView from "../components/EventListView";
 import Layout from "../components/Layout";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function EventsPage() {
   const router = useRouter();
@@ -28,8 +29,10 @@ export default function EventsPage() {
     return matchesSearch && matchesCategory;
   });
 
+  const { t } = useTranslation();
+
   return (
-    <Layout pageTitle="Upcoming Events">
+    <Layout pageTitle={t("common.browseEvents")}>
       <EventListView
         events={filteredEvents}
         searchTerm={searchTerm}

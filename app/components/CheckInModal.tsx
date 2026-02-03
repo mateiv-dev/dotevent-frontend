@@ -12,6 +12,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Button } from "./ui/Button";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export default function CheckInModal({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [checkedInCount, setCheckedInCount] = useState(0);
+  const { t } = useTranslation();
 
   const handleCheckIn = async () => {
     if (!ticketCode.trim()) {
@@ -55,7 +57,7 @@ export default function CheckInModal({
 
       setResult({
         success: true,
-        message: "Participant checked in successfully!",
+        message: t("checkInModal.success"),
       });
       setCheckedInCount((prev) => prev + 1);
       setTicketCode("");
@@ -97,7 +99,7 @@ export default function CheckInModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="relative bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
           <div className="flex items-center justify-between">
@@ -106,7 +108,7 @@ export default function CheckInModal({
                 <ScanLine size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Check-In Scanner</h2>
+                <h2 className="text-xl font-bold">{t("checkInModal.title")}</h2>
                 <p className="text-green-100 text-sm line-clamp-1">
                   {eventTitle}
                 </p>
@@ -124,7 +126,7 @@ export default function CheckInModal({
           <div className="mt-4 pt-4 border-t border-white/20 flex items-center gap-2">
             <UserCheck size={18} />
             <span className="font-medium">
-              {checkedInCount} checked in this session
+              {t("checkInModal.checkedInStats", { count: checkedInCount })}
             </span>
           </div>
         </div>
@@ -133,13 +135,13 @@ export default function CheckInModal({
         <div className="p-6 space-y-6">
           {/* Manual Input */}
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-slate-700">
-              Enter Ticket Code
+            <label className="block text-sm font-medium text-[var(--foreground)]">
+              {t("checkInModal.enterCode")}
             </label>
             <div className="relative">
               <Ticket
                 size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
               />
               <input
                 type="text"
@@ -149,24 +151,23 @@ export default function CheckInModal({
                   setResult(null);
                 }}
                 onKeyPress={handleKeyPress}
-                placeholder="e.g., ABC12345"
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 font-mono text-lg tracking-wider uppercase"
+                placeholder={t("checkInModal.placeholder")}
+                className="w-full pl-11 pr-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 font-mono text-lg tracking-wider uppercase"
                 autoFocus
               />
             </div>
-            <p className="text-xs text-slate-500">
-              The ticket code can be found on the participant's event ticket
+            <p className="text-xs text-[var(--muted-foreground)]">
+              {t("checkInModal.helpText")}
             </p>
           </div>
 
           {/* Result Message */}
           {result && (
             <div
-              className={`p-4 rounded-xl flex items-start gap-3 ${
-                result.success
-                  ? "bg-green-50 border border-green-200"
-                  : "bg-red-50 border border-red-200"
-              }`}
+              className={`p-4 rounded-xl flex items-start gap-3 ${result.success
+                ? "bg-green-50 border border-green-200"
+                : "bg-red-50 border border-red-200"
+                }`}
             >
               {result.success ? (
                 <CheckCircle className="text-green-600 shrink-0" size={20} />
@@ -174,9 +175,8 @@ export default function CheckInModal({
                 <AlertCircle className="text-red-600 shrink-0" size={20} />
               )}
               <p
-                className={`text-sm font-medium ${
-                  result.success ? "text-green-700" : "text-red-700"
-                }`}
+                className={`text-sm font-medium ${result.success ? "text-green-700" : "text-red-700"
+                  }`}
               >
                 {result.message}
               </p>
@@ -190,18 +190,18 @@ export default function CheckInModal({
             className="w-full"
             leftIcon={<UserCheck size={18} />}
           >
-            Check In Participant
+            {t("checkInModal.checkInButton")}
           </Button>
 
           {/* Info Box */}
-          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-            <h4 className="font-medium text-slate-900 text-sm">
-              How to check in participants:
+          <div className="bg-[var(--muted)] rounded-xl p-4 space-y-2">
+            <h4 className="font-medium text-[var(--foreground)] text-sm">
+              {t("checkInModal.instructionsTitle")}
             </h4>
-            <ul className="text-sm text-slate-600 space-y-1 list-disc list-inside">
-              <li>Ask the participant for their ticket code</li>
-              <li>Enter the code in the field above</li>
-              <li>Press Enter or click the button to check in</li>
+            <ul className="text-sm text-[var(--muted-foreground)] space-y-1 list-disc list-inside">
+              <li>{t("checkInModal.instructions1")}</li>
+              <li>{t("checkInModal.instructions2")}</li>
+              <li>{t("checkInModal.instructions3")}</li>
             </ul>
           </div>
         </div>

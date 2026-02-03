@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../context/AppContext";
+import { useTranslation } from "../hooks/useTranslation";
 import Layout from "../components/Layout";
 import EditEventModal from "../components/EditEventModal";
 import ParticipantsModal from "../components/ParticipantsModal";
@@ -60,6 +61,7 @@ export default function MyEventsPage() {
   const [participantsEvent, setParticipantsEvent] = useState<MyEvent | null>(null);
   const [checkInEvent, setCheckInEvent] = useState<MyEvent | null>(null);
   const [statisticsEvent, setStatisticsEvent] = useState<MyEvent | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (
@@ -133,23 +135,23 @@ export default function MyEventsPage() {
     switch (status) {
       case "pending":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
             <Clock size={12} />
-            Pending Review
+            {t("myEventsPage.status.pending")}
           </span>
         );
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-600 text-white dark:bg-green-500">
             <CheckCircle size={12} />
-            Approved
+            {t("myEventsPage.status.approved")}
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
             <XCircle size={12} />
-            Rejected
+            {t("myEventsPage.status.rejected")}
           </span>
         );
       default:
@@ -158,21 +160,21 @@ export default function MyEventsPage() {
   };
 
   return (
-    <Layout pageTitle="My Events">
+    <Layout pageTitle={t("myEventsPage.title")}>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Events</h1>
-            <p className="text-slate-500">
-              View and manage events you've created
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">{t("myEventsPage.title")}</h1>
+            <p className="text-[var(--muted-foreground)]">
+              {t("myEventsPage.subtitle")}
             </p>
           </div>
           <button
             onClick={() => router.push("/events/create")}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md hover:shadow-lg"
           >
             <Plus size={18} />
-            Create Event
+            {t("myEventsPage.createButton")}
           </button>
         </div>
 
@@ -186,13 +188,13 @@ export default function MyEventsPage() {
         )}
 
         {events.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <Calendar className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">
-              No events yet
+          <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-12 text-center shadow-sm">
+            <Calendar className="w-12 h-12 mx-auto mb-4 text-[var(--muted-foreground)]" />
+            <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+              {t("myEventsPage.noEventsTitle")}
             </h3>
-            <p className="text-slate-500 mb-4">
-              Create your first event to see it here
+            <p className="text-[var(--muted-foreground)] mb-4">
+              {t("myEventsPage.noEventsDesc")}
             </p>
           </div>
         ) : (
@@ -203,7 +205,7 @@ export default function MyEventsPage() {
               return (
                 <div
                   key={event.id || index}
-                  className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div
                     className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`}
@@ -211,7 +213,7 @@ export default function MyEventsPage() {
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       {event.titleImage && (
-                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-[var(--muted)] border border-[var(--border)]">
                           <img
                             src={getImageUrl(event.titleImage) || ""}
                             alt={event.title}
@@ -222,13 +224,13 @@ export default function MyEventsPage() {
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg text-slate-900">
+                          <h3 className="font-semibold text-lg text-[var(--foreground)]">
                             {event.title}
                           </h3>
                           {getStatusBadge(event.status)}
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-3">
+                        <div className="flex flex-wrap gap-4 text-sm text-[var(--muted-foreground)] mb-3">
                           <span className="flex items-center gap-1">
                             <Calendar size={14} />
                             {new Date(event.date).toLocaleDateString()} at {event.time}
@@ -243,23 +245,23 @@ export default function MyEventsPage() {
                           </span>
                         </div>
 
-                        <p className="text-sm text-slate-500 line-clamp-2 mb-3">
+                        <p className="text-sm text-[var(--muted-foreground)] line-clamp-2 mb-3">
                           {event.description}
                         </p>
 
                         {event.status === "rejected" &&
                           event.rejectionReason && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-3">
                               <div className="flex items-start gap-2">
                                 <AlertCircle
                                   size={16}
                                   className="text-red-500 mt-0.5 flex-shrink-0"
                                 />
                                 <div>
-                                  <p className="text-sm font-medium text-red-700">
-                                    Rejection Reason:
+                                  <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                                    {t("myEventsPage.rejectionReason")}:
                                   </p>
-                                  <p className="text-sm text-red-600">
+                                  <p className="text-sm text-red-600 dark:text-red-400">
                                     {event.rejectionReason}
                                   </p>
                                 </div>
@@ -274,12 +276,12 @@ export default function MyEventsPage() {
                             {event.category}
                           </span>
                           {event.faculty && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]">
                               {event.faculty}
                             </span>
                           )}
-                          <span className="text-xs text-slate-400">
-                            Created:{" "}
+                          <span className="text-xs text-[var(--muted-foreground)]">
+                            {t("myEventsPage.createdOn")}{" "}
                             {new Date(event.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -291,29 +293,29 @@ export default function MyEventsPage() {
                           <>
                             <button
                               onClick={() => setStatisticsEvent(event)}
-                              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                              title="View statistics"
+                              className="p-2 text-[var(--muted-foreground)] hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                              title={t("eventStatistics.title")}
                             >
                               <BarChart3 size={18} />
                             </button>
                             <button
                               onClick={() => setCheckInEvent(event)}
-                              className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                              title="Check-in participants"
+                              className="p-2 text-[var(--muted-foreground)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
+                              title={t("checkInModal.title")}
                             >
                               <ScanLine size={18} />
                             </button>
                             <button
                               onClick={() => setParticipantsEvent(event)}
-                              className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="View participants"
+                              className="p-2 text-[var(--muted-foreground)] hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                              title={t("participantsModal.title")}
                             >
                               <UserCheck size={18} />
                             </button>
                             <button
                               onClick={() => setEditingEvent(event)}
-                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Edit event"
+                              className="p-2 text-[var(--muted-foreground)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                              title={t("common.edit")}
                             >
                               <Edit size={18} />
                             </button>
@@ -321,8 +323,8 @@ export default function MyEventsPage() {
                         )}
                         <button
                           onClick={() => setShowDeleteConfirm(event.id)}
-                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete event"
+                          className="p-2 text-[var(--muted-foreground)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title={t("common.delete")}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -333,9 +335,9 @@ export default function MyEventsPage() {
                   {/* Delete Confirmation */}
                   {showDeleteConfirm === event.id && (
                     <div className="px-5 pb-5 pt-0">
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-sm font-medium text-red-800 mb-3">
-                          Are you sure you want to delete this event? This action cannot be undone.
+                      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-3">
+                          {t("myEventsPage.deleteConfirm")}
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -346,18 +348,18 @@ export default function MyEventsPage() {
                             {deletingEventId === event.id ? (
                               <>
                                 <Loader2 size={14} className="animate-spin" />
-                                Deleting...
+                                {t("myEventsPage.deleting")}
                               </>
                             ) : (
-                              "Delete"
+                              t("myEventsPage.deleteButton")
                             )}
                           </button>
                           <button
                             onClick={() => setShowDeleteConfirm(null)}
                             disabled={deletingEventId === event.id}
-                            className="px-3 py-1.5 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                            className="px-3 py-1.5 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg text-sm font-medium hover:bg-[var(--accent)] transition-colors"
                           >
-                            Cancel
+                            {t("common.cancel")}
                           </button>
                         </div>
                       </div>

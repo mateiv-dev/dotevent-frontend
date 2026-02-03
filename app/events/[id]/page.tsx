@@ -27,6 +27,7 @@ import Event from "../../types/event";
 import Review from "../../types/review";
 import { getCategoryStyles } from "../../utils/categoryStyles";
 import { getImageUrl } from "../../utils/imageUtils";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function EventDetailsPage({
   params,
@@ -56,6 +57,7 @@ export default function EventDetailsPage({
   const [newComment, setNewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -83,14 +85,14 @@ export default function EventDetailsPage({
 
   if (!event) {
     return (
-      <Layout pageTitle="Event Details">
+      <Layout pageTitle={t("eventDetails.notFoundTitle")}>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Event not found
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-2">
+              {t("eventDetails.notFoundTitle")}
             </h2>
-            <p className="text-slate-500 mb-4">
-              The event you're looking for doesn't exist.
+            <p className="text-[var(--muted-foreground)] mb-4">
+              {t("eventDetails.notFoundDesc")}
             </p>
           </div>
         </div>
@@ -139,7 +141,7 @@ export default function EventDetailsPage({
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
-        alert("Event link copied to clipboard!");
+        alert(t("eventDetails.shareSuccess"));
       }
     } catch (error) {
       console.error("Error sharing:", error);
@@ -176,7 +178,7 @@ export default function EventDetailsPage({
   };
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!confirm("Are you sure you want to delete your review?")) return;
+    if (!confirm(t("eventDetails.deleteReviewConfirm"))) return;
     try {
       await deleteReview(reviewId, event.id);
       setReviews(reviews.filter(r => r.id !== reviewId));
@@ -211,7 +213,7 @@ export default function EventDetailsPage({
   }
 
   return (
-    <Layout pageTitle="Event Details">
+    <Layout pageTitle={event.title}>
       <div className="space-y-8 max-w-5xl mx-auto">
         {/* Hero Section */}
         <div
@@ -269,7 +271,7 @@ export default function EventDetailsPage({
                 className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
               >
                 <MapPin size={20} className="text-white" />
-                <span className="font-medium text-white underline decoration-dotted text-shadow">{event.location}</span>
+                <span className="font-medium text-white text-shadow">{event.location}</span>
               </button>
             </div>
 
@@ -278,12 +280,12 @@ export default function EventDetailsPage({
               <div className="mt-4 flex flex-wrap gap-3">
                 {event.faculty && (
                   <span className="px-3 py-1 rounded-full bg-white/10 text-sm backdrop-blur-sm">
-                    Faculty: {event.faculty}
+                    {t("eventDetails.faculty")}: {event.faculty}
                   </span>
                 )}
                 {event.department && (
                   <span className="px-3 py-1 rounded-full bg-white/10 text-sm backdrop-blur-sm">
-                    Department: {event.department}
+                    {t("eventDetails.department")}: {event.department}
                   </span>
                 )}
               </div>
@@ -301,10 +303,10 @@ export default function EventDetailsPage({
           <div className="lg:col-span-2 space-y-8">
             {/* Attachments Section */}
             {displayAttachments.length > 0 && (
-              <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <section className="bg-[var(--card)] p-6 md:p-8 rounded-2xl border border-[var(--border)] shadow-sm">
+                <h2 className="text-xl font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
                   <Paperclip className="text-blue-500" size={24} />
-                  Attachments
+                  {t("eventDetails.attachments")}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {displayAttachments.map((attachment, index) => (
@@ -313,9 +315,9 @@ export default function EventDetailsPage({
                       href={getImageUrl(attachment.url) || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group relative flex flex-col bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                      className="group relative flex flex-col bg-[var(--background)] border border-[var(--border)] rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                     >
-                      <div className="aspect-video w-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                      <div className="aspect-video w-full bg-[var(--muted)] flex items-center justify-center overflow-hidden">
                         {attachment.fileType === "image" ? (
                           <img
                             src={getImageUrl(attachment.url) || ""}
@@ -326,11 +328,11 @@ export default function EventDetailsPage({
                           <FileText size={40} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
                         )}
                       </div>
-                      <div className="p-3 bg-white border-t border-slate-100 flex-1 flex flex-col justify-center">
-                        <p className="text-sm font-medium text-slate-700 truncate" title={attachment.name}>
+                      <div className="p-3 bg-[var(--card)] border-t border-[var(--border)] flex-1 flex flex-col justify-center">
+                        <p className="text-sm font-medium text-[var(--foreground)] truncate" title={attachment.name}>
                           {attachment.name}
                         </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
                           {attachment.size > 0 ? `${(attachment.size / 1024).toFixed(1)} KB` : "View file"}
                         </p>
                       </div>
@@ -341,51 +343,50 @@ export default function EventDetailsPage({
             )}
 
             {/* About Section */}
-            <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <section className="bg-[var(--card)] p-6 md:p-8 rounded-2xl border border-[var(--border)] shadow-sm">
+              <h2 className="text-xl font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
                 <Info className="text-blue-500" size={24} />
-                About this Event
+                {t("eventDetails.about")}
               </h2>
-              <p className="text-slate-600 leading-relaxed text-lg">
+              <p className="text-[var(--foreground)] leading-relaxed text-lg">
                 {event.description}
               </p>
-              <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-500">
+              <div className="mt-6 p-4 bg-[var(--muted)] rounded-xl border border-[var(--border)] text-sm text-[var(--muted-foreground)]">
                 <p>
-                  Please arrive 15 minutes early for check-in. Don't forget to
-                  bring your student ID.
+                  {t("eventDetails.arrivalNote")}
                 </p>
               </div>
             </section>
 
             {/* Organizer Section */}
-            <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <section className="bg-[var(--card)] p-6 md:p-8 rounded-2xl border border-[var(--border)] shadow-sm">
+              <h2 className="text-xl font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
                 <Building2 className="text-blue-500" size={24} />
-                Organizer
+                {t("eventDetails.organizer")}
               </h2>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-slate-900 text-white rounded-full flex items-center justify-center text-xl font-bold">
                   {organizerName.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-bold text-lg text-slate-900">
+                  <p className="font-bold text-lg text-[var(--foreground)]">
                     {organizerName}
                   </p>
-                  <p className="text-slate-500">
-                    Contact: {(typeof event.organizer !== 'string' && event.organizer?.contact) || event.author?.email || "events@university.edu"}
+                  <p className="text-[var(--muted-foreground)]">
+                    {t("eventDetails.contact")}: {(typeof event.organizer !== 'string' && event.organizer?.contact) || event.author?.email || "events@university.edu"}
                   </p>
                 </div>
               </div>
             </section>
 
             {/* Reviews Section */}
-            <section className="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <section className="bg-[var(--card)] p-6 md:p-8 rounded-2xl border border-[var(--border)] shadow-sm">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[var(--foreground)] flex items-center gap-2">
                   <MessageSquare className="text-blue-500" size={24} />
-                  Reviews
+                  {t("eventDetails.reviews")}
                   {reviews.length > 0 && (
-                    <span className="text-sm font-normal text-slate-500">({reviews.length})</span>
+                    <span className="text-sm font-normal text-[var(--muted-foreground)]">({reviews.length})</span>
                   )}
                 </h2>
 
@@ -394,28 +395,28 @@ export default function EventDetailsPage({
                     onClick={() => setShowReviewForm(true)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                   >
-                    Write a Review
+                    {t("eventDetails.writeReview")}
                   </button>
                 )}
               </div>
 
               {/* Review Form */}
               {showReviewForm && (
-                <form onSubmit={handleSubmitReview} className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <form onSubmit={handleSubmitReview} className="mb-6 p-4 bg-[var(--muted)] rounded-xl border border-[var(--border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium text-slate-900">Your Review</h3>
+                    <h3 className="font-medium text-[var(--foreground)]">{t("eventDetails.yourReview")}</h3>
                     <button
                       type="button"
                       onClick={() => setShowReviewForm(false)}
-                      className="p-1 hover:bg-slate-200 rounded-lg transition-colors"
+                      className="p-1 hover:bg-[var(--accent)] rounded-lg transition-colors"
                     >
-                      <X size={18} className="text-slate-500" />
+                      <X size={18} className="text-[var(--muted-foreground)]" />
                     </button>
                   </div>
 
                   {/* Star Rating */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Rating</label>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-2">{t("eventDetails.rating")}</label>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -436,18 +437,18 @@ export default function EventDetailsPage({
 
                   {/* Comment */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Comment (optional)
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                      {t("eventDetails.commentLabel")}
                     </label>
                     <textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       maxLength={500}
                       rows={3}
-                      placeholder="Share your experience..."
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                      placeholder={t("eventDetails.commentPlaceholder")}
+                      className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
                     />
-                    <p className="text-xs text-slate-500 mt-1">{newComment.length}/500</p>
+                    <p className="text-xs text-[var(--muted-foreground)] mt-1">{newComment.length}/500</p>
                   </div>
 
                   {reviewError && (
@@ -461,36 +462,36 @@ export default function EventDetailsPage({
                     disabled={reviewSubmitting}
                     className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {reviewSubmitting ? "Submitting..." : "Submit Review"}
+                    {reviewSubmitting ? t("eventDetails.submitting") : t("eventDetails.submitReview")}
                   </button>
                 </form>
               )}
 
               {/* Reviews List */}
               {reviewsLoading ? (
-                <div className="text-center py-8 text-slate-500">Loading reviews...</div>
+                <div className="text-center py-8 text-[var(--muted-foreground)]">Loading reviews...</div>
               ) : reviews.length === 0 ? (
                 <div className="text-center py-8">
-                  <MessageSquare size={40} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-slate-500">No reviews yet. Be the first to review!</p>
+                  <MessageSquare size={40} className="mx-auto text-[var(--muted-foreground)] opacity-50 mb-3" />
+                  <p className="text-[var(--muted-foreground)]">{t("eventDetails.noReviews")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {reviews.map((review) => (
-                    <div key={review.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div key={review.id} className="p-4 bg-[var(--muted)] rounded-xl border border-[var(--border)]">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-medium text-slate-600">
+                          <div className="w-10 h-10 bg-[var(--accent)] rounded-full flex items-center justify-center font-medium text-[var(--foreground)]">
                             {review.user.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{review.user.name}</p>
+                            <p className="font-medium text-[var(--foreground)]">{review.user.name}</p>
                             <div className="flex items-center gap-1">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star
                                   key={star}
                                   size={14}
-                                  className={star <= review.rating ? "text-amber-500" : "text-slate-300"}
+                                  className={star <= review.rating ? "text-amber-500" : "text-[var(--muted-foreground)]"}
                                   fill={star <= review.rating ? "currentColor" : "none"}
                                 />
                               ))}
@@ -498,7 +499,7 @@ export default function EventDetailsPage({
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-[var(--muted-foreground)]">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </span>
                           {currentUser?.id === review.user.id && (
@@ -512,7 +513,7 @@ export default function EventDetailsPage({
                         </div>
                       </div>
                       {review.comment && (
-                        <p className="text-slate-600 mt-2">{review.comment}</p>
+                        <p className="text-[var(--foreground)] mt-2">{review.comment}</p>
                       )}
                     </div>
                   ))}
@@ -523,16 +524,16 @@ export default function EventDetailsPage({
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 sticky top-8">
+            <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-lg p-6 sticky top-8">
               <div className="mb-6 text-center">
-                <p className="text-sm text-slate-500 mb-1">Availability</p>
+                <p className="text-sm text-[var(--muted-foreground)] mb-1">{t("eventDetails.availability")}</p>
                 <div className="flex items-center justify-center gap-2">
-                  <Users size={24} className="text-slate-400" />
-                  <span className="text-3xl font-bold text-slate-900">
+                  <Users size={24} className="text-[var(--muted-foreground)] opacity-50" />
+                  <span className="text-3xl font-bold text-[var(--foreground)]">
                     {event.capacity - event.attendees}
                   </span>
-                  <span className="text-slate-400 text-lg font-medium">
-                    / {event.capacity} left
+                  <span className="text-[var(--muted-foreground)] text-lg font-medium">
+                    / {event.capacity} {t("eventDetails.left")}
                   </span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
@@ -553,8 +554,8 @@ export default function EventDetailsPage({
                 )}
 
                 {currentUser && ["organizer", "admin"].includes(currentUser.role) ? (
-                  <div className="w-full py-3.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-center font-medium">
-                    This action is not available for {currentUser.role}s
+                  <div className="w-full py-3.5 rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-center font-medium">
+                    {t("eventDetails.roleRestricted", { role: currentUser.role })}
                   </div>
                 ) : (
                   <>
@@ -572,14 +573,14 @@ export default function EventDetailsPage({
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          {event.isRegistered ? "Unregistering..." : "Registering..."}
+                          {event.isRegistered ? t("eventDetails.unregistering") : t("eventDetails.registering")}
                         </>
                       ) : event.isRegistered ? (
                         <>
-                          <CheckCircle2 size={20} /> Registered
+                          <CheckCircle2 size={20} /> {t("eventDetails.registered")}
                         </>
                       ) : (
-                        "Register Now"
+                        t("eventDetails.registerNow")
                       )}
                     </button>
 
@@ -590,11 +591,11 @@ export default function EventDetailsPage({
                         disabled={favoriteLoading}
                         className={`w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${event.isFavorited
                           ? "bg-pink-100 text-pink-600 border border-pink-200 hover:bg-pink-200"
-                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-pink-200 hover:text-pink-600"
+                          : "bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] hover:border-pink-200 hover:text-pink-600"
                           }`}
                       >
                         <Heart size={18} fill={event.isFavorited ? "currentColor" : "none"} />
-                        {event.isFavorited ? "Saved to Favorites" : "Add to Favorites"}
+                        {event.isFavorited ? t("eventDetails.savedToFavorites") : t("eventDetails.addToFavorites")}
                       </button>
                     )}
                   </>
@@ -604,23 +605,23 @@ export default function EventDetailsPage({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleGetDirections}
-                    className="py-2.5 rounded-xl font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="py-2.5 rounded-xl font-medium text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] transition-colors flex items-center justify-center gap-2 text-sm"
                   >
-                    <Navigation size={16} /> Directions
+                    <Navigation size={16} /> {t("eventDetails.directions")}
                   </button>
                   <button
                     onClick={handleShare}
-                    className="py-2.5 rounded-xl font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="py-2.5 rounded-xl font-medium text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] transition-colors flex items-center justify-center gap-2 text-sm"
                   >
-                    <Share2 size={16} /> Share
+                    <Share2 size={16} /> {t("eventDetails.share")}
                   </button>
                 </div>
 
                 <button
                   onClick={handleOpenMap}
-                  className="w-full py-2.5 rounded-xl font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="w-full py-2.5 rounded-xl font-medium text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--accent)] transition-colors flex items-center justify-center gap-2 text-sm"
                 >
-                  <ExternalLink size={16} /> View on Maps
+                  <ExternalLink size={16} /> {t("eventDetails.viewOnMaps")}
                 </button>
               </div>
 
@@ -632,16 +633,16 @@ export default function EventDetailsPage({
                       <Check size={14} />
                     </div>
                     <div className="text-xs text-green-800">
-                      <p className="font-bold mb-0.5">You are going!</p>
+                      <p className="font-bold mb-0.5">{t("eventDetails.youAreGoing")}</p>
                       <p>
-                        A confirmation email has been sent to your inbox.
+                        {t("eventDetails.confirmationEmail")}
                       </p>
                     </div>
                   </div>
 
                   {event.ticketCode && (
                     <div className="pt-3 border-t border-green-200">
-                      <p className="text-xs text-green-700 font-medium mb-2">Your Ticket Code:</p>
+                      <p className="text-xs text-green-700 font-medium mb-2">{t("eventDetails.ticketCode")}</p>
                       <code className="block bg-white border border-green-200 rounded-lg px-3 py-2 text-sm font-mono text-green-900 text-center tracking-wider mb-3">
                         {event.ticketCode}
                       </code>
@@ -654,7 +655,7 @@ export default function EventDetailsPage({
                             alt="Ticket QR Code"
                             className="w-32 h-32 rounded-lg border border-green-200"
                           />
-                          <p className="text-xs text-green-600 mt-2">Scan to check in</p>
+                          <p className="text-xs text-green-600 mt-2">{t("eventDetails.scanCheckIn")}</p>
                         </div>
                       )}
                     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { Button } from "../ui/Button";
 import { TextArea } from "../ui/TextArea";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface RejectionReasonModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function RejectionReasonModal({
   const [error, setError] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -50,12 +52,12 @@ export default function RejectionReasonModal({
     const trimmedReason = reason.trim();
 
     if (!trimmedReason) {
-      setError("Please provide a rejection reason");
+      setError(t("admin.rejectionModal.required"));
       return;
     }
 
     if (trimmedReason.length < 10) {
-      setError("Rejection reason must be at least 10 characters");
+      setError(t("admin.rejectionModal.tooShort"));
       return;
     }
 
@@ -73,27 +75,27 @@ export default function RejectionReasonModal({
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center justify-between">
+        <div className="bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-900/50 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="text-red-600" size={20} />
+            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center">
+              <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-red-900">{title}</h2>
+              <h2 className="text-lg font-bold text-red-900 dark:text-red-300">{title}</h2>
               {itemName && (
-                <p className="text-sm text-red-700">{itemName}</p>
+                <p className="text-sm text-red-700 dark:text-red-400">{itemName}</p>
               )}
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+            className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors disabled:opacity-50"
           >
             <X size={20} />
           </button>
@@ -101,17 +103,16 @@ export default function RejectionReasonModal({
 
         {/* Content */}
         <div className="p-6 space-y-4">
-          <p className="text-sm text-slate-600">
-            Please provide a detailed explanation for this rejection. This will
-            be visible to the requester.
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {t("admin.rejectionModal.description")}
           </p>
 
           <div>
             <TextArea
               ref={textareaRef}
-              label="Rejection Reason"
+              label={t("admin.rejectionModal.reasonLabel")}
               rows={4}
-              placeholder="Explain why this request or event is being rejected..."
+              placeholder={t("admin.rejectionModal.placeholder")}
               value={reason}
               onChange={(e) => {
                 setReason(e.target.value);
@@ -120,32 +121,32 @@ export default function RejectionReasonModal({
               disabled={isSubmitting}
             />
             {error && (
-              <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+              <p className="text-red-600 dark:text-red-400 text-sm mt-2 flex items-center gap-1">
                 <AlertCircle size={14} />
                 {error}
               </p>
             )}
-            <p className="text-xs text-slate-500 mt-2">
-              {reason.trim().length} / 10 characters minimum
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
+              {reason.trim().length} / {t("admin.rejectionModal.minChars")}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-200">
+        <div className="bg-[var(--muted)]/30 px-6 py-4 flex items-center justify-end gap-3 border-t border-[var(--border)]">
           <Button
             variant="ghost"
             onClick={onClose}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("admin.rejectionModal.cancel")}
           </Button>
           <Button
             variant="danger"
             onClick={handleSubmit}
             disabled={isSubmitting || !reason.trim()}
           >
-            {isSubmitting ? "Rejecting..." : "Reject"}
+            {isSubmitting ? t("admin.rejectionModal.rejecting") : t("admin.rejectionModal.reject")}
           </Button>
         </div>
       </div>

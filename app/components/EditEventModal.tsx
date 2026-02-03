@@ -18,6 +18,7 @@ import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
 import { TextArea } from "./ui/TextArea";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ export default function EditEventModal({
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [existingFiles, setExistingFiles] = useState<Array<{ url: string; name: string }>>([]);
   const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -98,7 +100,7 @@ export default function EditEventModal({
 
     const totalFiles = existingFiles.length - filesToDelete.length + files.length + imageFiles.length;
     if (totalFiles > 10) {
-      setError("You can have a maximum of 10 images");
+      setError(t("createEvent.images.errorTooMany"));
       return;
     }
 
@@ -106,7 +108,7 @@ export default function EditEventModal({
       (file) => file.size > 5 * 1024 * 1024
     );
     if (oversizedFiles.length > 0) {
-      setError("Some files are too large. Maximum size is 5MB per file.");
+      setError(t("createEvent.images.errorTooBig"));
       return;
     }
 
@@ -146,10 +148,10 @@ export default function EditEventModal({
       if (success) {
         onClose();
       } else {
-        setError("Failed to update event. Please try again.");
+        setError(t("common.error"));
       }
     } catch (err: any) {
-      setError(err.message || "Failed to update event. Please try again.");
+      setError(err.message || t("common.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -157,24 +159,24 @@ export default function EditEventModal({
 
   return (
     <div className="fixed top-16 left-0 right-0 bottom-14 lg:left-64 lg:bottom-0 z-[100] flex items-center justify-center bg-black/50 p-4 transition-opacity animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0 bg-white">
-          <h2 className="text-xl font-bold text-slate-900">Edit Event</h2>
+      <div className="bg-white dark:bg-[var(--card)] rounded-2xl shadow-2xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)] shrink-0 bg-white dark:bg-[var(--card)]">
+          <h2 className="text-xl font-bold text-[var(--foreground)]">{t("editEvent.title")}</h2>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--muted)] rounded-lg transition-colors"
           >
-            <X size={20} className="text-slate-500" />
+            <X size={20} className="text-[var(--muted-foreground)]" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <Input
-              label="Event Title"
+              label={t("createEvent.fields.title")}
               required
-              placeholder="e.g., Annual Science Fair"
+              placeholder={t("createEvent.placeholders.title")}
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
@@ -184,7 +186,7 @@ export default function EditEventModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Date"
+                label={t("createEvent.fields.date")}
                 required
                 type="date"
                 leftIcon={<Calendar size={16} />}
@@ -195,7 +197,7 @@ export default function EditEventModal({
                 disabled={isSubmitting}
               />
               <Input
-                label="Time"
+                label={t("createEvent.fields.time")}
                 required
                 type="time"
                 leftIcon={<Clock size={16} />}
@@ -209,9 +211,9 @@ export default function EditEventModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Location"
+                label={t("createEvent.fields.location")}
                 required
-                placeholder="Room number or Building"
+                placeholder={t("createEvent.placeholders.location")}
                 leftIcon={<MapPin size={16} />}
                 value={formData.location}
                 onChange={(e) =>
@@ -220,7 +222,7 @@ export default function EditEventModal({
                 disabled={isSubmitting}
               />
               <Select
-                label="Category"
+                label={t("createEvent.fields.category")}
                 leftIcon={<Tag size={16} />}
                 value={formData.category}
                 onChange={(e) =>
@@ -237,7 +239,7 @@ export default function EditEventModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Capacity"
+                label={t("createEvent.fields.capacity")}
                 required
                 type="number"
                 min="1"
@@ -252,9 +254,9 @@ export default function EditEventModal({
                 disabled={isSubmitting}
               />
               <Input
-                label="Contact Info"
+                label={t("createEvent.fields.contact")}
                 required
-                placeholder="Email or Phone Number"
+                placeholder={t("createEvent.placeholders.contact")}
                 leftIcon={<User size={16} />}
                 value={formData.contact}
                 onChange={(e) =>
@@ -267,8 +269,8 @@ export default function EditEventModal({
             {/* Faculty & Department */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Faculty (Optional)"
-                placeholder="e.g., Faculty of Engineering"
+                label={t("createEvent.fields.faculty")}
+                placeholder={t("createEvent.placeholders.faculty")}
                 leftIcon={<Building size={16} />}
                 value={formData.faculty}
                 onChange={(e) =>
@@ -277,8 +279,8 @@ export default function EditEventModal({
                 disabled={isSubmitting}
               />
               <Input
-                label="Department (Optional)"
-                placeholder="e.g., Computer Science"
+                label={t("createEvent.fields.department")}
+                placeholder={t("createEvent.placeholders.department")}
                 leftIcon={<GraduationCap size={16} />}
                 value={formData.department}
                 onChange={(e) =>
@@ -289,9 +291,9 @@ export default function EditEventModal({
             </div>
 
             <TextArea
-              label="Description"
+              label={t("createEvent.fields.description")}
               rows={4}
-              placeholder="What is this event about?"
+              placeholder={t("createEvent.placeholders.description")}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -302,8 +304,8 @@ export default function EditEventModal({
             {/* Existing Files */}
             {existingFiles.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Current Images
+                <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                  {t("editEvent.currentImages")}
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {existingFiles.map((file, index) => {
@@ -313,7 +315,7 @@ export default function EditEventModal({
                         key={index}
                         className={`relative group rounded-lg overflow-hidden border ${isMarkedForDeletion
                           ? "border-red-300 opacity-50"
-                          : "border-slate-200"
+                          : "border-[var(--border)]"
                           }`}
                       >
                         <img
@@ -338,7 +340,7 @@ export default function EditEventModal({
                         {isMarkedForDeletion && (
                           <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
                             <span className="text-xs text-red-700 font-medium bg-white px-2 py-1 rounded">
-                              Will be deleted
+                              {t("editEvent.willBeDeleted")}
                             </span>
                           </div>
                         )}
@@ -351,8 +353,8 @@ export default function EditEventModal({
 
             {/* New File Upload */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Add New Images
+              <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                {t("createEvent.images.label")}
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -367,11 +369,11 @@ export default function EditEventModal({
                   />
                   <label
                     htmlFor="edit-file-upload"
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer border-slate-300 hover:border-blue-500 hover:bg-blue-50"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed rounded-xl transition-colors cursor-pointer border-[var(--border)] hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
-                    <Upload size={20} className="text-slate-400" />
-                    <span className="text-sm text-slate-600">
-                      Click to upload images (max 10 total, 5MB each)
+                    <Upload size={20} className="text-[var(--muted-foreground)]" />
+                    <span className="text-sm text-[var(--muted-foreground)]">
+                      {t("createEvent.images.uploadPrompt")}
                     </span>
                   </label>
                 </div>
@@ -382,7 +384,7 @@ export default function EditEventModal({
                     {filePreviews.map((preview, index) => (
                       <div
                         key={index}
-                        className="relative group rounded-lg overflow-hidden border border-slate-200"
+                        className="relative group rounded-lg overflow-hidden border border-[var(--border)]"
                       >
                         <img
                           src={preview}
@@ -413,14 +415,14 @@ export default function EditEventModal({
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-100 shrink-0 bg-white">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-[var(--border)] shrink-0 bg-white dark:bg-[var(--card)]">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("createEvent.buttons.cancel")}
             </Button>
             <Button
               type="submit"
@@ -432,7 +434,7 @@ export default function EditEventModal({
               }
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? t("createEvent.buttons.saving") : t("createEvent.buttons.save")}
             </Button>
           </div>
         </form>

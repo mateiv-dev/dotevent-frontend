@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import { getCategoryStyles } from "../../utils/categoryStyles";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface PendingEvent {
   id: string;
@@ -40,13 +41,14 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
   const [error, setError] = useState("");
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<PendingEvent | null>(null);
+  const { t } = useTranslation();
 
   const fetchEvents = async () => {
     try {
       const data = await apiClient.get<PendingEvent[]>("/api/events/pending");
       setEvents(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load pending events");
+      setError(err.message || t("common.error"));
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
     } catch (err: any) {
       const message = err instanceof APIError
         ? err.getUserFriendlyMessage()
-        : "Failed to approve event";
+        : t("common.error");
       setError(message);
     } finally {
       setActionLoading(null);
@@ -92,7 +94,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
     } catch (err: any) {
       const message = err instanceof APIError
         ? err.getUserFriendlyMessage()
-        : "Failed to reject event";
+        : t("common.error");
       setError(message);
     } finally {
       setActionLoading(null);
@@ -109,7 +111,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
 
   if (error && events.length === 0) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl">
         {error}
       </div>
     );
@@ -117,9 +119,9 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
 
   if (events.length === 0) {
     return (
-      <div className="text-center py-12 text-slate-500">
-        <Calendar className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-        <p>No pending events to review</p>
+      <div className="text-center py-12 text-[var(--muted-foreground)]">
+        <Calendar className="w-12 h-12 mx-auto mb-4 text-[var(--muted)]" />
+        <p>{t("admin.pending.noPending")}</p>
       </div>
     );
   }
@@ -127,7 +129,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -138,7 +140,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
         return (
           <div
             key={event.id || index}
-            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+            className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm"
           >
             <div
               className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`}
@@ -146,14 +148,14 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
             <div className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg text-slate-900 mb-2">
+                  <h3 className="font-semibold text-lg text-[var(--foreground)] mb-2">
                     {event.title}
                   </h3>
 
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-3">
+                  <div className="flex flex-wrap gap-4 text-sm text-[var(--muted-foreground)] mb-3">
                     <span className="flex items-center gap-1">
                       <Calendar size={14} />
-                      {event.date} at {event.time}
+                      {event.date} • {event.time}
                     </span>
                     <span className="flex items-center gap-1">
                       <MapPin size={14} />
@@ -161,18 +163,18 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                     </span>
                     <span className="flex items-center gap-1">
                       <Users size={14} />
-                      Capacity: {event.capacity}
+                      {t("admin.pending.capacity")}: {event.capacity}
                     </span>
                   </div>
 
-                  <div className="text-sm text-slate-500 mb-2">
-                    <span className="font-medium">Organizer:</span>{" "}
+                  <div className="text-sm text-[var(--muted-foreground)] mb-2">
+                    <span className="font-medium text-[var(--foreground)]">{t("admin.pending.organizer")}:</span>{" "}
                     {typeof event.organizer === 'string'
                       ? event.organizer
-                      : (event.organizer as any).organizationName || (event.organizer as any).represents || "Unknown"}
+                      : (event.organizer as any).organizationName || (event.organizer as any).represents || t("admin.pending.unknown")}
                   </div>
 
-                  <div className="text-sm text-slate-500 flex items-start gap-1">
+                  <div className="text-sm text-[var(--muted-foreground)] flex items-start gap-1">
                     <FileText size={14} className="mt-0.5 flex-shrink-0" />
                     <span className="line-clamp-2">{event.description}</span>
                   </div>
@@ -183,8 +185,8 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                     >
                       {event.category}
                     </span>
-                    <span className="text-xs text-slate-400">
-                      Submitted:{" "}
+                    <span className="text-xs text-[var(--muted-foreground)]">
+                      {t("myRequests.submitted")}{" "}
                       {new Date(event.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -204,7 +206,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                       )
                     }
                   >
-                    Approve
+                    {t("admin.pending.approve")}
                   </Button>
                   <Button
                     size="sm"
@@ -213,7 +215,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
                     disabled={actionLoading === event.id}
                     leftIcon={<X size={14} />}
                   >
-                    Reject
+                    {t("admin.pending.reject")}
                   </Button>
                 </div>
               </div>
@@ -229,7 +231,7 @@ export default function PendingEventsTab({ onAction }: PendingEventsTabProps) {
           setSelectedEvent(null);
         }}
         onSubmit={handleRejectConfirm}
-        title="Reject Event"
+        title={t("admin.pending.rejectTitle")}
         itemName={selectedEvent?.title}
         isSubmitting={actionLoading === selectedEvent?.id}
       />

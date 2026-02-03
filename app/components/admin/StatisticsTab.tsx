@@ -16,6 +16,7 @@ import {
   BarChart3,
   AlertCircle,
 } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const MONTH_NAMES = [
   "Jan",
@@ -36,6 +37,7 @@ export default function StatisticsTab() {
   const [statistics, setStatistics] = useState<TotalStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchStatistics();
@@ -51,7 +53,7 @@ export default function StatisticsTab() {
       const message =
         err instanceof APIError
           ? err.getUserFriendlyMessage()
-          : "Failed to load statistics";
+          : t("common.error");
       setError(message);
     } finally {
       setLoading(false);
@@ -69,13 +71,13 @@ export default function StatisticsTab() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-        <p className="text-red-600 font-medium">{error}</p>
+        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+        <p className="text-red-500 font-medium">{error}</p>
         <button
           onClick={fetchStatistics}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Try Again
+          {t("admin.statistics.tryAgain")}
         </button>
       </div>
     );
@@ -99,10 +101,10 @@ export default function StatisticsTab() {
             <div className="p-2 bg-white/20 rounded-lg">
               <Calendar size={20} />
             </div>
-            <span className="text-blue-100 font-medium">Total Events</span>
+            <span className="text-blue-100 font-medium">{t("admin.statistics.totalEvents")}</span>
           </div>
           <p className="text-3xl font-bold">{statistics.totalEventsAllTime}</p>
-          <p className="text-blue-200 text-sm mt-1">All time</p>
+          <p className="text-blue-200 text-sm mt-1">{t("admin.statistics.allTime")}</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg shadow-green-500/20">
@@ -110,10 +112,10 @@ export default function StatisticsTab() {
             <div className="p-2 bg-white/20 rounded-lg">
               <TrendingUp size={20} />
             </div>
-            <span className="text-green-100 font-medium">Last Month</span>
+            <span className="text-green-100 font-medium">{t("admin.statistics.lastMonth")}</span>
           </div>
           <p className="text-3xl font-bold">{statistics.eventsLastMonth}</p>
-          <p className="text-green-200 text-sm mt-1">Events created</p>
+          <p className="text-green-200 text-sm mt-1">{t("admin.statistics.eventsCreated")}</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg shadow-purple-500/20">
@@ -121,23 +123,23 @@ export default function StatisticsTab() {
             <div className="p-2 bg-white/20 rounded-lg">
               <Users size={20} />
             </div>
-            <span className="text-purple-100 font-medium">Avg. Occupancy</span>
+            <span className="text-purple-100 font-medium">{t("admin.statistics.avgOccupancy")}</span>
           </div>
           <p className="text-3xl font-bold">{statistics.averageOccupancy}%</p>
-          <p className="text-purple-200 text-sm mt-1">Registration rate</p>
+          <p className="text-purple-200 text-sm mt-1">{t("admin.statistics.registrationRate")}</p>
         </div>
       </div>
 
       {/* Monthly Activity Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-slate-100 rounded-lg">
-            <BarChart3 size={20} className="text-slate-600" />
+          <div className="p-2 bg-[var(--muted)] rounded-lg">
+            <BarChart3 size={20} className="text-[var(--foreground)]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Monthly Activity</h3>
-            <p className="text-sm text-slate-500">
-              Events created per month (Academic Year)
+            <h3 className="font-bold text-[var(--foreground)]">{t("admin.statistics.monthlyActivity")}</h3>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {t("admin.statistics.monthlyActivityDesc")}
             </p>
           </div>
         </div>
@@ -153,14 +155,14 @@ export default function StatisticsTab() {
                 key={index}
                 className="flex-1 flex flex-col items-center gap-2"
               >
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-[var(--muted-foreground)]">
                   {item.count}
                 </span>
                 <div
                   className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all hover:from-blue-600 hover:to-blue-500"
                   style={{ height: `${height}%`, minHeight: "4px" }}
                 />
-                <span className="text-xs text-slate-500 font-medium">
+                <span className="text-xs text-[var(--muted-foreground)] font-medium">
                   {monthName}
                 </span>
               </div>
@@ -170,14 +172,14 @@ export default function StatisticsTab() {
       </div>
 
       {/* Top Organizations */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-[var(--card)] rounded-xl border border-[var(--border)] p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-slate-100 rounded-lg">
-            <Building2 size={20} className="text-slate-600" />
+          <div className="p-2 bg-[var(--muted)] rounded-lg">
+            <Building2 size={20} className="text-[var(--foreground)]" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Top Organizations</h3>
-            <p className="text-sm text-slate-500">Most active event creators</p>
+            <h3 className="font-bold text-[var(--foreground)]">{t("admin.statistics.topOrganizations")}</h3>
+            <p className="text-sm text-[var(--muted-foreground)]">{t("admin.statistics.mostActive")}</p>
           </div>
         </div>
 
@@ -201,14 +203,14 @@ export default function StatisticsTab() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-[var(--foreground)]">
                         {org.name}
                       </span>
-                      <span className="text-sm text-slate-500">
-                        {org.events} events
+                      <span className="text-sm text-[var(--muted-foreground)]">
+                        {org.events} {t("settings.eventUpdates").toLowerCase().split(' ')[0]} {/* "Event" */}
                       </span>
                     </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-[var(--muted)] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all"
                         style={{ width: `${percentage}%` }}
@@ -220,8 +222,8 @@ export default function StatisticsTab() {
             })}
           </div>
         ) : (
-          <p className="text-slate-500 text-center py-4">
-            No organization data available
+          <p className="text-[var(--muted-foreground)] text-center py-4">
+            {t("admin.statistics.noOrgData")}
           </p>
         )}
       </div>

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { getImageUrl } from "../utils/imageUtils";
+import { useTranslation } from "../hooks/useTranslation";
 
 export default function OrganizationEventsPage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function OrganizationEventsPage() {
   const [events, setEvents] = useState<OrganizationEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (
@@ -47,7 +49,7 @@ export default function OrganizationEventsPage() {
       const message =
         err instanceof APIError
           ? err.getUserFriendlyMessage()
-          : "Failed to load organization events";
+          : t("common.error");
       setError(message);
     } finally {
       setLoading(false);
@@ -64,23 +66,23 @@ export default function OrganizationEventsPage() {
     switch (status) {
       case "pending":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
             <Clock size={12} />
-            Pending
+            {t("organizationEvents.pending")}
           </span>
         );
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-600 text-white dark:bg-green-500">
             <CheckCircle size={12} />
-            Approved
+            {t("organizationEvents.approved")}
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
             <XCircle size={12} />
-            Rejected
+            {t("organizationEvents.rejected")}
           </span>
         );
       default:
@@ -90,7 +92,7 @@ export default function OrganizationEventsPage() {
 
   if (isLoading || loading) {
     return (
-      <Layout pageTitle="Organization Events">
+      <Layout pageTitle={t("organizationEvents.title")}>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
@@ -101,48 +103,48 @@ export default function OrganizationEventsPage() {
   const organizationName =
     currentUser?.role === "student_rep"
       ? (currentUser as any).represents
-      : (currentUser as any)?.organizationName || "Your Organization";
+      : (currentUser as any)?.organizationName || t("common.orgEvents");
 
   return (
-    <Layout pageTitle="Organization Events">
+    <Layout pageTitle={t("organizationEvents.title")}>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
             <Building2 className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Organization Events
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+              {t("organizationEvents.title")}
             </h1>
-            <p className="text-slate-500">
-              All events from {organizationName}
+            <p className="text-[var(--muted-foreground)]">
+              {t("organizationEvents.subtitle")} {organizationName}
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
+          <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
             <button
               onClick={fetchOrganizationEvents}
-              className="text-red-600 hover:text-red-800 font-medium text-sm"
+              className="text-red-600 hover:text-red-800 dark:hover:text-red-200 font-medium text-sm"
             >
-              Try Again
+              {t("organizationEvents.tryAgain")}
             </button>
           </div>
         )}
 
         {events.length === 0 && !error ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <Building2 className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">
-              No organization events
+          <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] p-12 text-center">
+            <Building2 className="w-12 h-12 mx-auto mb-4 text-[var(--muted-foreground)] opacity-50" />
+            <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+              {t("organizationEvents.noEvents")}
             </h3>
-            <p className="text-slate-500">
-              No events have been created for your organization yet
+            <p className="text-[var(--muted-foreground)]">
+              {t("organizationEvents.noEventsDesc")}
             </p>
           </div>
         ) : (
@@ -154,7 +156,7 @@ export default function OrganizationEventsPage() {
                 <div
                   key={event.id || index}
                   onClick={() => router.push(`/events/${event.id}`)}
-                  className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group"
                 >
                   <div
                     className={`h-2 bg-gradient-to-r ${categoryStyles.gradient}`}
@@ -162,27 +164,27 @@ export default function OrganizationEventsPage() {
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       {event.titleImage && (
-                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-[var(--muted)] border border-[var(--border)]">
                           <img
                             src={getImageUrl(event.titleImage) || ""}
                             alt={event.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
                       )}
 
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg text-slate-900">
+                          <h3 className="font-semibold text-lg text-[var(--foreground)] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {event.title}
                           </h3>
                           {getStatusBadge(event.status)}
                         </div>
 
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-3">
+                        <div className="flex flex-wrap gap-4 text-sm text-[var(--muted-foreground)] mb-3">
                           <span className="flex items-center gap-1">
                             <Calendar size={14} />
-                            {new Date(event.date).toLocaleDateString()} at{" "}
+                            {new Date(event.date).toLocaleDateString()} •{" "}
                             {event.time}
                           </span>
                           <span className="flex items-center gap-1">
@@ -196,17 +198,17 @@ export default function OrganizationEventsPage() {
                         </div>
 
                         {event.status === "rejected" && event.rejectionReason && (
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                          <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 mt-2">
                             <div className="flex items-start gap-2">
                               <AlertCircle
                                 size={16}
-                                className="text-red-500 mt-0.5 shrink-0"
+                                className="text-red-500 shrink-0 mt-0.5"
                               />
                               <div>
-                                <p className="text-sm font-medium text-red-700">
-                                  Rejection Reason:
+                                <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                                  {t("myRequests.rejectionReason")}
                                 </p>
-                                <p className="text-sm text-red-600">
+                                <p className="text-sm text-red-600 dark:text-red-400">
                                   {event.rejectionReason}
                                 </p>
                               </div>
@@ -221,11 +223,11 @@ export default function OrganizationEventsPage() {
                             {event.category}
                           </span>
                           {event.author && (
-                            <span className="text-xs text-slate-400">
-                              Created by {event.author.name}
+                            <span className="text-xs text-[var(--muted-foreground)]">
+                              {t("organizationEvents.createdBy")} {event.author.name}
                             </span>
                           )}
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-[var(--muted-foreground)]">
                             •{" "}
                             {new Date(event.createdAt).toLocaleDateString()}
                           </span>

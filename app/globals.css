@@ -9,6 +9,69 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  /* zinc-950 */
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #2563eb;
+  /* blue-600 */
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  /* zinc-100 */
+  --secondary-foreground: #18181b;
+  --muted: #fbfbfc;
+  /* nearly white */
+  --muted-foreground: #64748b;
+  /* slate-500 */
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  /* red-500 */
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  /* zinc-200 */
+  --input: #e4e4e7;
+  --ring: #2563eb;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #09090b;
+  /* zinc-950 */
+  --foreground: #fafafa;
+  /* zinc-50 */
+  --card: #18181b;
+  /* zinc-900 */
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #3b82f6;
+  /* blue-500 */
+  --primary-foreground: #ffffff;
+  --secondary: #27272a;
+  /* zinc-800 */
+  --secondary-foreground: #fafafa;
+  --muted: #121215;
+  /* slightly lighter than background */
+  --muted-foreground: #a1a1aa;
+  /* zinc-400 */
+  --accent: #27272a;
+  /* zinc-800 */
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  /* red-900 */
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  /* zinc-800 */
+  --input: #27272a;
+  --ring: #1d4ed8;
+  /* blue-700 */
+}
+
 .safe-area-pb {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);

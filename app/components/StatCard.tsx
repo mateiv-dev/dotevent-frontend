@@ -5,25 +5,25 @@ function StatCard({
   icon,
   label,
   value,
-  color = "slate",
+  iconClassName = "bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
-  color?: string;
+  iconClassName?: string;
 }) {
   return (
     <Card className="flex items-center gap-4">
       <div
-        className={`w-12 h-12 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center shrink-0`}
+        className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconClassName}`}
       >
         {icon}
       </div>
       <div>
-        <p className="text-sm font-medium text-slate-500 truncate max-w-[120px]">
+        <p className="text-sm font-medium text-[var(--muted-foreground)] truncate max-w-[120px]">
           {label}
         </p>
-        <p className="text-2xl font-bold text-slate-900">{value}</p>
+        <p className="text-2xl font-bold text-[var(--foreground)]">{value}</p>
       </div>
     </Card>
   );

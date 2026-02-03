@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogIn, Mail, Lock } from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation";
+import { useApp } from "../context/AppContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,7 +14,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user, loading } = useAuth();
+  const { settings } = useApp();
   const router = useRouter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!loading && user) {
@@ -22,7 +26,7 @@ export default function LoginPage() {
 
   if (loading || user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -40,53 +44,53 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || t("common.error"));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative blur elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400 opacity-20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-indigo-400 opacity-10 rounded-full blur-3xl"></div>
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
+      {/* Decorative blur elements - Adapted for theme */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Brand section with gradient */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg shadow-blue-600/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg shadow-blue-600/30 mb-4 animate-in fade-in zoom-in-95 duration-500">
             <LogIn className="text-white" size={32} />
           </div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent mb-2">
-            Welcome Back
+            {t("login.welcomeTitle")}
           </h2>
-          <p className="text-slate-600 font-medium">
-            Sign in to continue to your dashboard
+          <p className="text-[var(--muted-foreground)] font-medium">
+            {t("login.welcomeDesc")}
           </p>
         </div>
 
         {/* Main card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 p-8 border border-white/20">
+        <div className="bg-[var(--card)]/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-[var(--border)] animate-in slide-in-from-bottom-5 duration-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email input */}
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-slate-700 mb-2"
+                className="block text-sm font-semibold text-[var(--foreground)] mb-2"
               >
-                Email Address
+                {t("login.emailLabel")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                  <Mail className="text-slate-400" size={20} />
+                  <Mail className="text-[var(--muted-foreground)]" size={20} />
                 </div>
                 <input
                   id="email"
                   type="email"
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-3 py-3 border border-[var(--input)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-[var(--background)]/50 backdrop-blur-sm"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -98,19 +102,19 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-semibold text-slate-700 mb-2"
+                className="block text-sm font-semibold text-[var(--foreground)] mb-2"
               >
-                Password
+                {t("login.passwordLabel")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                  <Lock className="text-slate-400" size={20} />
+                  <Lock className="text-[var(--muted-foreground)]" size={20} />
                 </div>
                 <input
                   id="password"
                   type="password"
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50 backdrop-blur-sm"
+                  className="block w-full pl-10 pr-3 py-3 border border-[var(--input)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-[var(--background)]/50 backdrop-blur-sm"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -120,7 +124,7 @@ export default function LoginPage() {
 
             {/* Error message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
                 <svg
                   className="w-5 h-5 shrink-0 mt-0.5"
                   fill="currentColor"
@@ -164,12 +168,12 @@ export default function LoginPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Signing in...
+                  {t("login.signingIn")}
                 </>
               ) : (
                 <>
                   <LogIn size={20} />
-                  Sign In
+                  {t("login.signInButton")}
                 </>
               )}
             </button>
@@ -177,13 +181,13 @@ export default function LoginPage() {
         </div>
 
         {/* Footer link */}
-        <p className="text-center mt-6 text-slate-600">
-          {`Don't have an account? `}
+        <p className="text-center mt-6 text-[var(--muted-foreground)]">
+          {t("login.noAccount")}{" "}
           <Link
             href="/register"
-            className="font-semibold text-blue-600 hover:text-indigo-700 transition-colors"
+            className="font-semibold text-blue-600 hover:text-indigo-700 dark:text-blue-400 dark:hover:text-indigo-300 transition-colors"
           >
-            Sign up
+            {t("login.signUpLink")}
           </Link>
         </p>
       </div>

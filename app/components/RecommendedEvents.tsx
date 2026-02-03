@@ -5,6 +5,7 @@ import { apiClient, APIError, RecommendedEvent } from "../../lib/apiClient";
 import { Loader2, Sparkles, MapPin, Calendar, Star, ChevronRight } from "lucide-react";
 import { getCategoryStyles } from "../utils/categoryStyles";
 import { getImageUrl } from "../utils/imageUtils";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface RecommendedEventsProps {
   onEventClick: (id: string) => void;
@@ -13,6 +14,7 @@ interface RecommendedEventsProps {
 export default function RecommendedEvents({
   onEventClick,
 }: RecommendedEventsProps) {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<RecommendedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,16 +39,16 @@ export default function RecommendedEvents({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+      <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-sm p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl text-white">
             <Sparkles size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-xl text-slate-900">
-              Recommended For You
+            <h3 className="font-bold text-xl text-[var(--foreground)]">
+              {t("dashboard.recommendations")}
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--muted-foreground)]">
               Based on your preferences
             </p>
           </div>
@@ -63,17 +65,17 @@ export default function RecommendedEvents({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+    <div className="bg-[var(--card)] rounded-2xl border border-[var(--border)] shadow-sm p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl text-white">
             <Sparkles size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-xl text-slate-900">
-              Recommended For You
+            <h3 className="font-bold text-xl text-[var(--foreground)]">
+              {t("dashboard.recommendations")}
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--muted-foreground)]">
               Based on your preferences
             </p>
           </div>
@@ -92,7 +94,7 @@ export default function RecommendedEvents({
             <div
               key={event.id}
               onClick={() => onEventClick(event.id)}
-              className="group bg-slate-50 hover:bg-white rounded-xl border border-slate-100 hover:border-purple-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+              className="group bg-[var(--muted)] hover:bg-[var(--card)] rounded-xl border border-[var(--border)] hover:border-purple-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
             >
               {/* Image */}
               {event.titleImage && (
@@ -124,13 +126,13 @@ export default function RecommendedEvents({
                 </div>
 
                 {/* Title */}
-                <h4 className="font-bold text-slate-900 line-clamp-2 mb-2 group-hover:text-purple-700 transition-colors">
+                <h4 className="font-bold text-[var(--foreground)] line-clamp-2 mb-2 group-hover:text-purple-700 transition-colors">
                   {event.title}
                 </h4>
 
                 {/* Details */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
                     <Calendar size={14} className="shrink-0" />
                     <span className="truncate">
                       {new Date(event.date).toLocaleDateString("en-US", {
@@ -140,20 +142,20 @@ export default function RecommendedEvents({
                       at {event.time}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
                     <MapPin size={14} className="shrink-0" />
                     <span className="truncate">{event.location}</span>
                   </div>
                 </div>
 
                 {/* Organizer */}
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs text-slate-400 truncate">
+                <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between">
+                  <span className="text-xs text-[var(--muted-foreground)] truncate">
                     By {organizerName}
                   </span>
                   <ChevronRight
                     size={16}
-                    className="text-slate-300 group-hover:text-purple-500 transition-colors"
+                    className="text-[var(--muted-foreground)] group-hover:text-purple-500 transition-colors"
                   />
                 </div>
               </div>
